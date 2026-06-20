@@ -1,4 +1,4 @@
-package com.ronogar.appointment_system.model;
+package com.ronogar.appointment_system.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
