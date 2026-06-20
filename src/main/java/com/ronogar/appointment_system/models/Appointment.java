@@ -21,7 +21,10 @@ public class Appointment {
 
     private LocalDateTime dateTime;
     private AppointmentStatus status;
-    //private Professional professional;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "professional_id")
+    private Professional professional;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
