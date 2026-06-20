@@ -3,7 +3,7 @@ package com.ronogar.appointment_system.controllers;
 import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
-import com.ronogar.appointment_system.services.UserService;
+import com.ronogar.appointment_system.services.User.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
