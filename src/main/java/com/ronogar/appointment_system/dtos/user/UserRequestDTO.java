@@ -1,6 +1,5 @@
 package com.ronogar.appointment_system.dtos.user;
 
-import com.ronogar.appointment_system.models.Appointment;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -14,7 +13,7 @@ import lombok.Setter;
 public class UserRequestDTO {
 
     @NotBlank
-    private String username;
+    private String firstName;
     @NotBlank
     private String lastName;
     @NotBlank
