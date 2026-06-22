@@ -3,6 +3,7 @@ package com.ronogar.appointment_system.services.User;
 import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
+import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -51,22 +52,23 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO getUserById(Long id) {
         return userRepository.findById(id)
                 .map(this::toDto)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
     }
 
     @Override
     public UserResponseDTO getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(this::toDto)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with email " + email + " not found"));
     }
 
     @Override
     public List<UserResponseDTO> getUserByLastName(String lastname) {
-        return userRepository.findByLastName(lastname)
-                .stream()
-                .map(this::toDto)
-                .toList();
+        List<User> users = userRepository.findByLastName(lastname);
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException("User with last name " + lastname + " not found");
+        }
+        return users.stream().map(this::toDto).toList();
     }
 
     @Override
@@ -79,7 +81,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUser(Long id, UserRequestDTO userRequestDTO) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
         user.setEmail(userRequestDTO.getEmail());
@@ -89,14 +91,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
         userRepository.deleteById(id);
     }
 
     @Override
     public void patchUser(Long id, UserPatchDTO userPatchDTO) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
         if (userPatchDTO.getFirstName() != null) {
             user.setFirstName(userPatchDTO.getFirstName());
         }

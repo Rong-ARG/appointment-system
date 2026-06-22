@@ -3,6 +3,7 @@ package com.ronogar.appointment_system.services.Professional;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
+import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
@@ -53,22 +54,23 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     public ProfessionalResponseDTO getProfessionalById(Long id) {
         return professionalRepository.findById(id)
                 .map(this::toDto)
-                .orElseThrow(() -> new RuntimeException("professional not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
     }
 
     @Override
     public ProfessionalResponseDTO getProfessionalByEmail(String email) {
         return professionalRepository.findByEmail(email)
                 .map(this::toDto)
-                .orElseThrow(() -> new RuntimeException("professional not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("professional with email: " + email + " not found"));
     }
 
     @Override
     public List<ProfessionalResponseDTO> getProfessionalByLastName(String lastName) {
-        return professionalRepository.findByLastName(lastName)
-                .stream()
-                .map(this::toDto)
-                .toList();
+        List<Professional> professionals = professionalRepository.findByLastName(lastName);
+        if (professionals.isEmpty()) {
+            throw new ResourceNotFoundException("professional with last name: " + lastName + " not found");
+        }
+        return professionals.stream().map(this::toDto).toList();
     }
 
     @Override
@@ -82,7 +84,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Override
     public void updateProfessional(Long id, ProfessionalRequestDTO professionalRequestDTO) {
         Professional professional = professionalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("professional not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
         professional.setFirstName(professionalRequestDTO.getFirstName());
         professional.setLastName(professionalRequestDTO.getLastName());
         professional.setEmail(professionalRequestDTO.getEmail());
@@ -96,14 +98,14 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Override
     public void deleteProfessional(Long id) {
         professionalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("professional not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
         professionalRepository.deleteById(id);
     }
 
     @Override
     public void patchProfessional(Long id, ProfessionalPatchDTO professional) {
        Professional professional1 =  professionalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("professional not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
         if (professional.getEmail() != null) {
             professional1.setEmail(professional.getEmail());
         }

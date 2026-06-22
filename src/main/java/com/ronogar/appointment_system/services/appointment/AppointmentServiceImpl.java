@@ -5,6 +5,7 @@ import com.ronogar.appointment_system.dtos.Appointment.AppointmentRequestDTO;
 import com.ronogar.appointment_system.dtos.Appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
+import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Appointment;
 import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.models.User;
@@ -34,10 +35,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setStatus(appointmentRequestDTO.getStatus());
 
         User user = userRepository.findById(appointmentRequestDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + appointmentRequestDTO.getUserId() + " not found"));
 
         Professional professional = professionalRepository.findById(appointmentRequestDTO.getProfessionalId())
-                .orElseThrow(() -> new RuntimeException("Professional not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Professional with id " + appointmentRequestDTO.getProfessionalId() + " not found"));
 
         appointment.setUser(user);
         appointment.setProfessional(professional);
@@ -80,7 +81,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponseDTO getAppointmentById(Long id) {
         return appointmentRepository.findById(id)
                 .map(this::toDto)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
     }
 
     @Override
@@ -93,14 +94,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public void deleteAppointmentById(Long id) {
         appointmentRepository.findById(id)
-                .orElseThrow(() ->  new RuntimeException("Appointment not found"));
+                .orElseThrow(() ->  new ResourceNotFoundException("appointment with id " + id + " not found"));
         appointmentRepository.deleteById(id);
     }
 
     @Override
     public void patchAppointment(Long id, AppointmentPatchDTO appointmentPatchDTO) {
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
         if (appointmentPatchDTO.getStatus() != null) {
             appointment.setStatus(appointmentPatchDTO.getStatus());
         }
