@@ -81,7 +81,7 @@ docker compose up -d
 
 ## Roadmap
 
-- [x] Spring Security + JWT
+- [ ] Spring Security + JWT
 - [ ] Swagger / OpenAPI documentation
 - [ ] Flyway migrations
-- [ ] Exception handling
+- [x] Exception handling
