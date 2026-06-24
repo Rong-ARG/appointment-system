@@ -13,6 +13,16 @@ for my first job as a backend developer :)
 - Docker
 - Lombok
 - Jakarta Validation
+- springdoc-openapi 2.8.9
+
+## Notes
+
+- Spring Boot version was set to 4.1.0 to ensure compatibility with springdoc-openapi 2.8.9
+- Database credentials are not included in the repository for security reasons — use the example properties file
+
+## API Documentation
+
+Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 
 ## Getting Started
 
@@ -24,25 +34,19 @@ for my first job as a backend developer :)
 ### Setup
 
 1. Clone the repository
-   \```
-git clone https://github.com/Rong-ARG/appointment-system.git
-cd appointment-system
-\```
+   git clone https://github.com/Rong-ARG/appointment-system.git
+   cd appointment-system
 
 2. Copy the example properties file
-   \```
-cp src/main/resources/application.properties.example src/main/resources/application.properties
-\```
+   cp src/main/resources/application.properties.example src/main/resources/application.properties
 
 3. Start the database
-   \```
-docker compose up -d
-\```
+   docker compose up -d
 
 4. Run the application
-   \```
-./mvnw spring-boot:run
-\```
+   ./mvnw spring-boot:run
+
+5. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
 
 ## API Endpoints
 
@@ -81,7 +85,8 @@ docker compose up -d
 
 ## Roadmap
 
-- [ ] Spring Security + JWT
-- [ ] Swagger / OpenAPI documentation
-- [ ] Flyway migrations
 - [x] Exception handling
+- [x] Swagger / OpenAPI documentation
+- [ ] Spring Security + JWT
+- [ ] Flyway migrations
+- [ ] Unit testing (JUnit)
