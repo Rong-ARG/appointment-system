@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in — Appointment System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="center-stage">
+    <div class="ticket">
+        <div class="ticket-head">
+            <div class="eyebrow">Appointment System</div>
+            <h1>Log in</h1>
+            <p>Enter your email and password.</p>
+        </div>
+        <hr class="ticket-divider">
+        <div class="ticket-body">
+            <form id="login-form" novalidate>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+                <div class="field-error" id="email-error"></div>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                <div class="field-error" id="password-error"></div>
+                <button type="submit">Log in</button>
+                <div class="status-msg" id="status"></div>
+            </form>
+            <div class="helper-row">
+                Don't have an account? <a href="register.html">Sign up</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="js/api.js"></script>
+<script>
+    if (isLoggedIn()) window.location.href = "dashboard.html";
+    const form = document.getElementById("login-form");
+    const statusEl = document.getElementById("status");
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        document.getElementById("email-error").textContent = "";
+        document.getElementById("password-error").textContent = "";
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        let hasError = false;
+        if (!email) {
+            document.getElementById("email-error").textContent = "Email is required.";
+            hasError = true;
+        }
+        if (!password) {
+            document.getElementById("password-error").textContent = "Password is required.";
+            hasError = true;
+        }
+        if (hasError) return;
+        try {
+            const data = await apiFetch("/auth/login", {
+                method: "POST",
+                body: JSON.stringify({email, password}),
+            });
+            saveToken(data.token);
+            window.location.href = "dashboard.html";
+        } catch (err) {
+            showStatus(statusEl, "We couldn't log you in: " + err.message, "error");
+        }
+    });
+</script>
+</body>
+</html>

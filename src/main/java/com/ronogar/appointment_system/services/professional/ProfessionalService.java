@@ -1,4 +1,4 @@
-package com.ronogar.appointment_system.services.Professional;
+package com.ronogar.appointment_system.services.professional;
 
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;

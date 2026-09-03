@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Appointment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <a href="dashboard.html" class="brand">Appointment System</a>
+  <nav>
+    <a href="#" id="logout-link">Log out</a>
+  </nav>
+</div>
+<div class="page-wrap">
+  <h1>What would you like to do?</h1>
+  <p>Choose an option to continue.</p>
+  <div class="option-grid">
+    <a class="option-card" href="search-professionals.html">
+      <span class="tag">Appointments</span>
+      <h3>Find a professional</h3>
+      <p>Find an available professional and request an appointment.</p>
+    </a>
+    <a class="option-card" href="become-professional.html?mode=create">
+      <span class="tag">Profile</span>
+      <h3>Become a professional</h3>
+      <p>Add your specialty so other users can find you.</p>
+    </a>
+    <a class="option-card" href="become-professional.html?mode=remove">
+      <span class="tag">Profile</span>
+      <h3>Stop being a professional</h3>
+      <p>Deactivate your existing professional profile.</p>
+    </a>
+    <a class="option-card" href="#" id="logout-card">
+      <span class="tag">Session</span>
+      <h3>Log out</h3>
+      <p>Sign out of your account on this device.</p>
+    </a>
+  </div>
+</div>
+<script src="js/api.js"></script>
+<script>
+  requireAuth();
+  document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+  document.getElementById("logout-card").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+</script>
+</body>
+</html>

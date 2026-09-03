@@ -1,4 +1,4 @@
-package com.ronogar.appointment_system.services.User;
+package com.ronogar.appointment_system.services.user;
 
 import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
@@ -6,26 +6,25 @@ import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
-    public UserServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-
-    }
+    private final PasswordEncoder passwordEncoder;
 
     private User toEntity(UserRequestDTO userRequestDTO) {
         User user = new User();
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
         user.setEmail(userRequestDTO.getEmail());
-        user.setPassword(userRequestDTO.getPassword());
+        user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
         user.setPhone(userRequestDTO.getPhone());
         return user;
     }
@@ -41,7 +40,6 @@ public class UserServiceImpl implements UserService {
 
         return userResponseDTO;
     }
-
 
     @Override
     public List<UserResponseDTO> getAllUsers() {
@@ -64,7 +62,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponseDTO> getUserByLastName(String lastname) {
+
         List<User> users = userRepository.findByLastName(lastname);
+
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("User with last name " + lastname + " not found");
         }
@@ -80,8 +80,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUser(Long id, UserRequestDTO userRequestDTO) {
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
         user.setEmail(userRequestDTO.getEmail());
@@ -97,8 +99,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void patchUser(Long id, UserPatchDTO userPatchDTO) {
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
         if (userPatchDTO.getFirstName() != null) {
             user.setFirstName(userPatchDTO.getFirstName());
         }

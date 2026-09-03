@@ -1,24 +1,21 @@
-package com.ronogar.appointment_system.services.Professional;
+package com.ronogar.appointment_system.services.professional;
 
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Professional;
-import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ProfessionalServiceImpl implements ProfessionalService {
 
     private final ProfessionalRepository professionalRepository;
-
-    public ProfessionalServiceImpl(ProfessionalRepository professionalRepository) {
-        this.professionalRepository = professionalRepository;
-    }
 
     private Professional toEntity(ProfessionalRequestDTO professionalRequestDTO) {
         Professional professional = new Professional();

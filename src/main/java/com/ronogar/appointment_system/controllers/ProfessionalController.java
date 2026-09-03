@@ -3,7 +3,7 @@ package com.ronogar.appointment_system.controllers;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
-import com.ronogar.appointment_system.services.Professional.ProfessionalService;
+import com.ronogar.appointment_system.services.professional.ProfessionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

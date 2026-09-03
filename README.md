@@ -1,11 +1,8 @@
 # Appointment System API
-
 A REST API for scheduling appointments between clients and professionals.
 Built as a personal project to practice Java and Spring Boot while preparing
 for my first job as a backend developer :)
-
 ## Technologies
-
 - Java 21
 - Spring Boot 4.1.0
 - Spring Data JPA
@@ -14,42 +11,34 @@ for my first job as a backend developer :)
 - Lombok
 - Jakarta Validation
 - springdoc-openapi 2.8.9
-
+- Spring Security + JWT (auth0/java-jwt)
 ## Notes
-
 - Spring Boot version was set to 4.1.0 to ensure compatibility with springdoc-openapi 2.8.9
 - Database credentials are not included in the repository for security reasons — use the example properties file
-
+- The JWT key here is just a demo key, committed on purpose so the project runs out of the box. In a real app this should never be hardcoded, it would come from an environment variable instead.
 ## API Documentation
-
 Swagger UI available at: http://localhost:8080/swagger-ui/index.html
-
 ## Getting Started
-
 ### Prerequisites
-
 - Java 21
 - Docker
-
 ### Setup
-
 1. Clone the repository
    git clone https://github.com/Rong-ARG/appointment-system.git
    cd appointment-system
-
 2. Copy the example properties file
    cp src/main/resources/application.properties.example src/main/resources/application.properties
-
 3. Start the database
    docker compose up -d
-
 4. Run the application
    ./mvnw spring-boot:run
-
 5. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
-
+6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow.
 ## API Endpoints
-
+### Auth
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /auth/login | Log in with email and password, returns a JWT |
 ### Users
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -61,7 +50,6 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 | PUT | /api/users/{id} | Update user |
 | PATCH | /api/users/{id} | Partially update user |
 | DELETE | /api/users/{id} | Delete user |
-
 ### Professionals
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -73,7 +61,6 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 | PUT | /api/professionals/{id} | Update professional |
 | PATCH | /api/professionals/{id} | Partially update professional |
 | DELETE | /api/professionals/{id} | Delete professional |
-
 ### Appointments
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -82,11 +69,10 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 | POST | /api/appointments | Create appointment |
 | PATCH | /api/appointments/{id} | Update appointment status |
 | DELETE | /api/appointments/{id} | Delete appointment |
-
 ## Roadmap
-
 - [x] Exception handling
 - [x] Swagger / OpenAPI documentation
-- [ ] Spring Security + JWT
+- [x] Spring Security + JWT
+- [ ] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
 - [ ] Unit testing (JUnit)

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find a professional — Appointment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <a href="dashboard.html" class="brand">Appointment System</a>
+  <nav>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="#" id="logout-link">Log out</a>
+  </nav>
+</div>
+<div class="page-wrap">
+  <h1>Find a professional</h1>
+  <p>We show every registered professional. Filter by last name to find someone specific.</p>
+  <div class="search-row">
+    <label for="lastname-input" class="sr-only">Search by last name</label>
+    <input type="text" id="lastname-input" placeholder="Search by last name (optional)">
+    <button id="search-btn">Search</button>
+    <button id="clear-btn" class="secondary">View all</button>
+  </div>
+  <div id="results" class="result-list"></div>
+  <div id="empty" class="empty-state" style="display:none;">No professionals matched that search.</div>
+</div>
+<script src="js/api.js"></script>
+<script>
+  requireAuth();
+  document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+  const resultsEl = document.getElementById("results");
+  const emptyEl = document.getElementById("empty");
+  function renderResults(list) {
+    resultsEl.innerHTML = "";
+    if (!list || list.length === 0) {
+      emptyEl.style.display = "block";
+      return;
+    }
+    emptyEl.style.display = "none";
+    list.forEach((prof) => {
+      const row = document.createElement("div");
+      row.className = "result-row";
+      row.innerHTML = `
+        <div>
+          <div class="name">${prof.firstName ?? ""} ${prof.lastName ?? ""}</div>
+          <div class="meta">${prof.specialty ?? prof.email ?? ""}</div>
+        </div>
+      `;
+      resultsEl.appendChild(row);
+    });
+  }
+  async function loadAll() {
+    try {
+      const data = await apiFetch("/api/professionals");
+      renderResults(data);
+    } catch (err) {
+      emptyEl.textContent = "Search failed: " + err.message;
+      emptyEl.style.display = "block";
+    }
+  }
+  async function loadByLastname(lastName) {
+    try {
+      const data = await apiFetch(`/api/professionals/lastname/${encodeURIComponent(lastName)}`);
+      renderResults(Array.isArray(data) ? data : [data]);
+    } catch (err) {
+      emptyEl.textContent = "Search failed: " + err.message;
+      emptyEl.style.display = "block";
+    }
+  }
+  document.getElementById("search-btn").addEventListener("click", () => {
+    const value = document.getElementById("lastname-input").value.trim();
+    if (value) loadByLastname(value); else loadAll();
+  });
+  document.getElementById("clear-btn").addEventListener("click", () => {
+    document.getElementById("lastname-input").value = "";
+    loadAll();
+  });
+  loadAll();
+</script>
+</body>
+</html>

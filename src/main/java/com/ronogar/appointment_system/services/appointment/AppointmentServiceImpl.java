@@ -1,8 +1,8 @@
 package com.ronogar.appointment_system.services.appointment;
 
-import com.ronogar.appointment_system.dtos.Appointment.AppointmentPatchDTO;
-import com.ronogar.appointment_system.dtos.Appointment.AppointmentRequestDTO;
-import com.ronogar.appointment_system.dtos.Appointment.AppointmentResponseDTO;
+import com.ronogar.appointment_system.dtos.appointment.AppointmentPatchDTO;
+import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
+import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
@@ -12,21 +12,17 @@ import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 @Service
+@RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final ProfessionalRepository professionalRepository;
     private final UserRepository userRepository;
-
-    public AppointmentServiceImpl(AppointmentRepository appointmentRepository, ProfessionalRepository professionalRepository, UserRepository userRepository) {
-        this.appointmentRepository = appointmentRepository;
-        this.professionalRepository = professionalRepository;
-        this.userRepository = userRepository;
-    }
 
     public final Appointment toEntity(AppointmentRequestDTO appointmentRequestDTO) {
         Appointment appointment = new Appointment();

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign up — Appointment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="center-stage">
+  <div class="ticket">
+    <div class="ticket-head">
+      <div class="eyebrow">Appointment System</div>
+      <h1>Create account</h1>
+      <p>Sign up as a user to start booking appointments.</p>
+    </div>
+    <hr class="ticket-divider">
+    <div class="ticket-body">
+      <form id="register-form" novalidate>
+        <label for="firstName">First name</label>
+        <input type="text" id="firstName" required>
+        <label for="lastName">Last name</label>
+        <input type="text" id="lastName" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" required>
+        <label for="password">Password</label>
+        <input type="password" id="password" required minlength="4">
+        <button type="submit">Create account</button>
+        <div class="status-msg" id="status"></div>
+      </form>
+      <div class="helper-row">
+        Already have an account? <a href="login.html">Log in</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById("register-form");
+  const statusEl = document.getElementById("status");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const payload = {
+      firstName: document.getElementById("firstName").value.trim(),
+      lastName: document.getElementById("lastName").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      password: document.getElementById("password").value,
+    };
+    try {
+      await apiFetch("/api/users", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      showStatus(statusEl, "Account created. You can log in now.", "ok");
+      form.reset();
+      setTimeout(() => { window.location.href = "login.html"; }, 1200);
+    } catch (err) {
+      showStatus(statusEl, "We couldn't create the account: " + err.message, "error");
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-package com.ronogar.appointment_system.dtos.Appointment;
+package com.ronogar.appointment_system.dtos.appointment;
 
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;

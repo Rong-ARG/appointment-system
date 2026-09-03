@@ -1,4 +1,4 @@
-package com.ronogar.appointment_system.dtos.Appointment;
+package com.ronogar.appointment_system.dtos.appointment;
 
 import com.ronogar.appointment_system.enums.AppointmentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;

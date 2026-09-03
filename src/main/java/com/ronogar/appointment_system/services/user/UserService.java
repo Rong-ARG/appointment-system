@@ -1,4 +1,4 @@
-package com.ronogar.appointment_system.services.User;
+package com.ronogar.appointment_system.services.user;
 
 import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;

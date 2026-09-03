@@ -1,8 +1,8 @@
 package com.ronogar.appointment_system.controllers;
 
-import com.ronogar.appointment_system.dtos.Appointment.AppointmentPatchDTO;
-import com.ronogar.appointment_system.dtos.Appointment.AppointmentRequestDTO;
-import com.ronogar.appointment_system.dtos.Appointment.AppointmentResponseDTO;
+import com.ronogar.appointment_system.dtos.appointment.AppointmentPatchDTO;
+import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
+import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.services.appointment.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
