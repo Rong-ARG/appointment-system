@@ -3,6 +3,7 @@ package com.ronogar.appointment_system.controllers;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
+import com.ronogar.appointment_system.dtos.professional.ProfessionalSelfRequestDTO;
 import com.ronogar.appointment_system.services.professional.ProfessionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -71,6 +73,20 @@ public class ProfessionalController {
     @PostMapping
     public ResponseEntity<ProfessionalResponseDTO> createProfessional(@Valid @RequestBody ProfessionalRequestDTO professionalRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(professionalService.createProfessional(professionalRequestDTO));
+    }
+
+    @Operation(summary = "Create my professional profile", description = "Creates a professional profile linked to the currently authenticated account")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Professional profile created successfully"),
+            @ApiResponse(responseCode = "409", description = "A professional profile already exists for this account"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data — check required fields")
+    })
+    @PostMapping("/me")
+    public ResponseEntity<ProfessionalResponseDTO> createOwnProfessionalProfile(
+            Authentication authentication,
+            @Valid @RequestBody ProfessionalSelfRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(professionalService.createOwnProfessionalProfile(authentication.getName(), dto));
     }
 
     @Operation(summary = "Update professional", description = "Fully update a existing professional by ID")

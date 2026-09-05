@@ -52,14 +52,14 @@ public class AppointmentServiceImpl implements AppointmentService {
         userDTO.setId(appointment.getUser().getId());
         userDTO.setFirstName(appointment.getUser().getFirstName());
         userDTO.setLastName(appointment.getUser().getLastName());
-        userDTO.setEmail(appointment.getUser().getEmail());
+        userDTO.setEmail(appointment.getUser().getAccount().getEmail());
         userDTO.setPhone(appointment.getUser().getPhone());
 
         ProfessionalResponseDTO  professionalDTO = new ProfessionalResponseDTO();
         professionalDTO.setId(appointment.getProfessional().getId());
         professionalDTO.setFirstName(appointment.getProfessional().getFirstName());
         professionalDTO.setLastName(appointment.getProfessional().getLastName());
-        professionalDTO.setEmail(appointment.getProfessional().getEmail());
+        professionalDTO.setEmail(appointment.getProfessional().getAccount().getEmail());
         professionalDTO.setPhone(appointment.getProfessional().getPhone());
 
         dto.setUser(userDTO);

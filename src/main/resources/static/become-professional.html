@@ -28,6 +28,7 @@
     <hr class="ticket-divider">
     <div class="ticket-body">
 
+      <!-- Form: create professional profile (linked to the logged-in account) -->
       <form id="create-form" novalidate>
         <label for="firstName">First name</label>
         <input type="text" id="firstName" required>
@@ -35,29 +36,32 @@
         <label for="lastName">Last name</label>
         <input type="text" id="lastName" required>
 
-        <label for="email">Email</label>
-        <input type="email" id="email" required>
-
-        <label for="password">Password</label>
-        <input type="password" id="password" required minlength="4">
+        <label for="phone">Phone</label>
+        <input type="text" id="phone" required>
 
         <label for="specialty">Specialty</label>
         <input type="text" id="specialty" placeholder="E.g. Dentist, Welder..." required>
+
+        <label for="yearsOfExperience">Years of experience</label>
+        <input type="number" id="yearsOfExperience" min="0" required>
+
+        <label for="available">Available to take appointments</label>
+        <input type="checkbox" id="available" checked>
 
         <button type="submit">Create professional profile</button>
         <div class="status-msg" id="create-status"></div>
       </form>
 
+      <!-- Form: remove professional profile -->
       <form id="remove-form" novalidate style="display:none;">
         <label for="professionalId">Professional profile ID</label>
         <input type="number" id="professionalId" min="1" required>
         <div class="field-error">
-          Note: until the Account-Professional relationship exists, you have
-          to enter the ID manually. Once it's implemented, this will fill in
-          automatically.
+          Note: until the Account-Professional relation exists, you need to
+          enter the ID manually. Once implemented, this will fill in on its own.
         </div>
 
-        <button type="submit" class="danger">Deactivate</button>
+        <button type="submit" class="danger">Remove profile</button>
         <div class="status-msg" id="remove-status"></div>
       </form>
 
@@ -75,11 +79,12 @@
 
   if (mode === "remove") {
     document.getElementById("title").textContent = "Stop being a professional";
-    document.getElementById("subtitle").textContent = "This deactivates your existing professional profile.";
+    document.getElementById("subtitle").textContent = "This removes your existing professional profile.";
     document.getElementById("create-form").style.display = "none";
     document.getElementById("remove-form").style.display = "block";
   }
 
+  // ---- Create professional profile (linked to the authenticated account) ----
   document.getElementById("create-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const statusEl = document.getElementById("create-status");
@@ -87,13 +92,14 @@
     const payload = {
       firstName: document.getElementById("firstName").value.trim(),
       lastName: document.getElementById("lastName").value.trim(),
-      email: document.getElementById("email").value.trim(),
-      password: document.getElementById("password").value,
+      phone: document.getElementById("phone").value.trim(),
       specialty: document.getElementById("specialty").value.trim(),
+      yearsOfExperience: Number(document.getElementById("yearsOfExperience").value),
+      available: document.getElementById("available").checked,
     };
 
     try {
-      await apiFetch("/api/professionals", {
+      await apiFetch("/api/professionals/me", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -104,6 +110,7 @@
     }
   });
 
+  // ---- Remove professional profile ----
   document.getElementById("remove-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const statusEl = document.getElementById("remove-status");
@@ -111,10 +118,10 @@
 
     try {
       await apiFetch(`/api/professionals/${id}`, { method: "DELETE" });
-      showStatus(statusEl, "Professional profile deactivated.", "ok");
+      showStatus(statusEl, "Professional profile removed.", "ok");
       event.target.reset();
     } catch (err) {
-      showStatus(statusEl, "We couldn't deactivate the profile: " + err.message, "error");
+      showStatus(statusEl, "We couldn't remove the profile: " + err.message, "error");
     }
   });
 </script>

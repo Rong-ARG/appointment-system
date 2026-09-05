@@ -19,11 +19,14 @@ public class Professional {
 
     private  String firstName;
     private String lastName;
-    private String email;
     private String phone;
     private String specialty;
     private Integer yearsOfExperience;
     private Boolean available;
+
+    @OneToOne
+    @JoinColumn(name = "account_id", nullable = false,unique = true)
+    private Account account;
 
     @OneToMany(mappedBy = "professional",fetch = FetchType.LAZY)
     List<Appointment> appointments;

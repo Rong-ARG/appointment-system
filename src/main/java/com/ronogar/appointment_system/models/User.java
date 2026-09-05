@@ -19,9 +19,11 @@ public class User {
 
     private String firstName;
     private String lastName;
-    private String password;
-    private String email;
     private String phone;
+
+    @OneToOne
+    @JoinColumn(name = "account_id", nullable = false,unique = true)
+    private Account account;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Appointment> appointments;

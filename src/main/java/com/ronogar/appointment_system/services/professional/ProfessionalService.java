@@ -3,6 +3,7 @@ package com.ronogar.appointment_system.services.professional;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
+import com.ronogar.appointment_system.dtos.professional.ProfessionalSelfRequestDTO;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ public interface ProfessionalService {
     ProfessionalResponseDTO getProfessionalById(Long id);
     ProfessionalResponseDTO getProfessionalByEmail(String email);
     List<ProfessionalResponseDTO> getProfessionalByLastName(String lastName);
+    ProfessionalResponseDTO createOwnProfessionalProfile(String email, ProfessionalSelfRequestDTO professionalSelfRequestDTO);
 
     ProfessionalResponseDTO createProfessional(ProfessionalRequestDTO professionalRequestDTO);
     void updateProfessional(Long id, ProfessionalRequestDTO professionalRequestDTO);
