@@ -73,6 +73,6 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - [x] Exception handling
 - [x] Swagger / OpenAPI documentation
 - [x] Spring Security + JWT
-- [ ] Shared Account/roles model (a person can be both a user and a professional)
+- [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
 - [ ] Unit testing (JUnit)
