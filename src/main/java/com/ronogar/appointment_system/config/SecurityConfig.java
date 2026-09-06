@@ -36,7 +36,7 @@ public class SecurityConfig {
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/login.html", "/register.html", "/index.html","/dashboard.html","/search-professionals.html","/become-professional.html", "/css/**", "/js/**").permitAll();
                     authorizeRequests.requestMatchers(HttpMethod.POST, "/auth/login").permitAll();
                     authorizeRequests.requestMatchers(HttpMethod.POST, "/api/users").permitAll();
-                    authorizeRequests.requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("READ");
+                    authorizeRequests.requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN");
 
                     authorizeRequests.anyRequest().authenticated();
                 }).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class )
