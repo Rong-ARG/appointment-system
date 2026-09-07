@@ -95,7 +95,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     public ProfessionalResponseDTO createProfessional(ProfessionalRequestDTO professionalRequestDTO) {
         Account account = accountRepository.findByEmail(professionalRequestDTO.getEmail())
                 .map(this::attachProfessionalRole)
-                .orElseGet(()-> createAccount(professionalRequestDTO));
+                .orElseGet(() -> createAccount(professionalRequestDTO));
 
         Professional professional = toEntity(professionalRequestDTO);
         professional.setAccount(account);
@@ -155,14 +155,22 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
     @Override
     public void deleteProfessional(Long id) {
-        professionalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
+        Professional professional = professionalRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
+        Account account = professional.getAccount();
         professionalRepository.deleteById(id);
+
+        if (account.getUser() == null) {
+            accountRepository.delete(account);
+        } else {
+            account.getRoles().remove(Role.PROFESSIONAL);
+            accountRepository.save(account);
+        }
     }
+
 
     @Override
     public void patchProfessional(Long id, ProfessionalPatchDTO professionalPatchDTO) {
-       Professional professional1 =  professionalRepository.findById(id)
+        Professional professional1 = professionalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
         if (professionalPatchDTO.getEmail() != null) {
             Account account = professional1.getAccount();

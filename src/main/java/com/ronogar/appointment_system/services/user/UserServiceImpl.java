@@ -121,9 +121,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+    User user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+        Account account =  user.getAccount();
         userRepository.deleteById(id);
+        if(account.getProfessional() == null) {
+            accountRepository.delete(account);
+        } else {
+            account.getRoles().remove(Role.USER);
+            accountRepository.save(account);
+        }
     }
 
     @Override
