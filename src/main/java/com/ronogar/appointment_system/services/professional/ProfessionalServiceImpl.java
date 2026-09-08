@@ -14,6 +14,7 @@ import com.ronogar.appointment_system.repositories.ProfessionalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -92,6 +93,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     }
 
     @Override
+    @Transactional
     public ProfessionalResponseDTO createProfessional(ProfessionalRequestDTO professionalRequestDTO) {
         Account account = accountRepository.findByEmail(professionalRequestDTO.getEmail())
                 .map(this::attachProfessionalRole)
@@ -104,6 +106,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     }
 
     @Override
+    @Transactional
     public ProfessionalResponseDTO createOwnProfessionalProfile(String email, ProfessionalSelfRequestDTO dto) {
         Account account = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Account with email " + email + " not found"));
@@ -134,6 +137,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     }
 
     @Override
+    @Transactional
     public void updateProfessional(Long id, ProfessionalRequestDTO professionalRequestDTO) {
         Professional professional = professionalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
@@ -154,6 +158,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     }
 
     @Override
+    @Transactional
     public void deleteProfessional(Long id) {
         Professional professional = professionalRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
         Account account = professional.getAccount();
@@ -169,6 +174,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
 
     @Override
+    @Transactional
     public void patchProfessional(Long id, ProfessionalPatchDTO professionalPatchDTO) {
         Professional professional1 = professionalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));

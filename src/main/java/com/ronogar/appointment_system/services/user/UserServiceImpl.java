@@ -13,6 +13,7 @@ import com.ronogar.appointment_system.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -73,6 +74,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
         Account account = accountRepository.findByEmail(userRequestDTO.getEmail())
                 .map(this::attachUserRole)
@@ -103,6 +105,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateUser(Long id, UserRequestDTO userRequestDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
@@ -120,6 +123,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUser(Long id) {
     User user = userRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
@@ -134,6 +138,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void patchUser(Long id, UserPatchDTO userPatchDTO) {
 
         User user = userRepository.findById(id)

@@ -20,6 +20,8 @@ public class Appointment {
     private Long id;
 
     private LocalDateTime dateTime;
+
+    @Enumerated(EnumType.STRING)
     private AppointmentStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)

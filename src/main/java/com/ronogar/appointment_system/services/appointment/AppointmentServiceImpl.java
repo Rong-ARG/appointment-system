@@ -5,6 +5,7 @@ import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
+import com.ronogar.appointment_system.enums.AppointmentStatus;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Appointment;
 import com.ronogar.appointment_system.models.Professional;
@@ -13,7 +14,13 @@ import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 @Service
@@ -27,8 +34,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public final Appointment toEntity(AppointmentRequestDTO appointmentRequestDTO) {
         Appointment appointment = new Appointment();
         appointment.setDateTime(appointmentRequestDTO.getDateTime());
-        appointment.setDateTime(appointmentRequestDTO.getDateTime());
-        appointment.setStatus(appointmentRequestDTO.getStatus());
+        appointment.setStatus(AppointmentStatus.PENDING);
 
         User user = userRepository.findById(appointmentRequestDTO.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + appointmentRequestDTO.getUserId() + " not found"));
@@ -81,6 +87,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional
     public AppointmentResponseDTO createAppointment(AppointmentRequestDTO appointmentRequestDTO) {
         Appointment newAppointment = (toEntity(appointmentRequestDTO));
         Appointment savedAppointment = appointmentRepository.save(newAppointment);
@@ -88,6 +95,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional
     public void deleteAppointmentById(Long id) {
         appointmentRepository.findById(id)
                 .orElseThrow(() ->  new ResourceNotFoundException("appointment with id " + id + " not found"));
@@ -95,9 +103,22 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    @Transactional
     public void patchAppointment(Long id, AppointmentPatchDTO appointmentPatchDTO) {
+
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
+
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Authentication authentication = securityContext.getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        User user = userRepository.findByAccountEmail(userDetails.getUsername()).orElseThrow(() -> new ResourceNotFoundException("User with email " + userDetails.getUsername() + " not found"));
+
+        if (!user.getId().equals(appointment.getUser().getId())) {
+            throw new AccessDeniedException("User with id " + user.getId() + " not matched");
+        }
+
         if (appointmentPatchDTO.getStatus() != null) {
             appointment.setStatus(appointmentPatchDTO.getStatus());
         }

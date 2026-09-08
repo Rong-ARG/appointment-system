@@ -1,6 +1,5 @@
 package com.ronogar.appointment_system.config;
 import com.ronogar.appointment_system.repositories.AccountRepository;
-import com.ronogar.appointment_system.models.Account;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
+
     private final AccountRepository accountRepository;
 
     @Override
