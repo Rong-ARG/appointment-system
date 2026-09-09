@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
@@ -61,7 +62,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         userDTO.setEmail(appointment.getUser().getAccount().getEmail());
         userDTO.setPhone(appointment.getUser().getPhone());
 
-        ProfessionalResponseDTO  professionalDTO = new ProfessionalResponseDTO();
+        ProfessionalResponseDTO professionalDTO = new ProfessionalResponseDTO();
         professionalDTO.setId(appointment.getProfessional().getId());
         professionalDTO.setFirstName(appointment.getProfessional().getFirstName());
         professionalDTO.setLastName(appointment.getProfessional().getLastName());
@@ -97,9 +98,27 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public void deleteAppointmentById(Long id) {
-        appointmentRepository.findById(id)
-                .orElseThrow(() ->  new ResourceNotFoundException("appointment with id " + id + " not found"));
+
+        User user = getAuthenticatedUser();
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
+
+        if (!appointment.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         appointmentRepository.deleteById(id);
+    }
+
+    private User getAuthenticatedUser() {
+
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Authentication authentication = securityContext.getAuthentication();
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        return userRepository.findByAccountEmail(userDetails.getUsername())
+                .orElseThrow(() -> new AccessDeniedException("User with email " + userDetails.getUsername() + " not found"));
     }
 
     @Override
@@ -109,11 +128,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        Authentication authentication = securityContext.getAuthentication();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        User user = userRepository.findByAccountEmail(userDetails.getUsername()).orElseThrow(() -> new ResourceNotFoundException("User with email " + userDetails.getUsername() + " not found"));
+        User user = getAuthenticatedUser();
 
         if (!user.getId().equals(appointment.getUser().getId())) {
             throw new AccessDeniedException("User with id " + user.getId() + " not matched");
