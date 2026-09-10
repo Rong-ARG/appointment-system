@@ -31,6 +31,14 @@ public class AppointmentController {
     public ResponseEntity<List<AppointmentResponseDTO>> getAllAppointments() {
         return ResponseEntity.ok(appointmentService.getAppointments());
     }
+    @Operation(summary = "Get user appointment", description = "get user specific appointment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Return appointment matched with the user")
+    })
+    @GetMapping("/mine")
+    public ResponseEntity<List<AppointmentResponseDTO>> getUserAppointments() {
+        return ResponseEntity.ok(appointmentService.getMyAppointments());
+    }
 
     @Operation(summary = "Get appointment", description = "Returns appointment matched with the ID provided")
     @ApiResponses(value = {

@@ -53,3 +53,24 @@ function showStatus(el, message, type) {
   el.textContent = message;
   el.className = `status-msg show ${type}`;
 }
+
+function decodeToken() {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const payload = token.split(".")[1];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+async function getMyUserId() {
+  const payload = decodeToken();
+  if (!payload || !payload.sub) {
+    throw new Error("Could not read current user from token");
+  }
+  const user = await apiFetch(`/api/users/email/${encodeURIComponent(payload.sub)}`);
+  return user.id;
+}

@@ -81,6 +81,12 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    public List<AppointmentResponseDTO> getMyAppointments(){
+         User user = getAuthenticatedUser();
+         return appointmentRepository.findByUserId(user.getId()).stream().map(this::toDto).toList();
+    }
+
+    @Override
     public AppointmentResponseDTO getAppointmentById(Long id) {
         return appointmentRepository.findById(id)
                 .map(this::toDto)

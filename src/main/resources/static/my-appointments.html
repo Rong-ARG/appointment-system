@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My appointments — Appointment System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+    <a href="dashboard.html" class="brand">Appointment System</a>
+    <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="#" id="logout-link">Log out</a>
+    </nav>
+</div>
+<div class="page-wrap">
+    <h1>My appointments</h1>
+    <p>Here are the appointments you've requested.</p>
+    <div id="results" class="result-list"></div>
+    <div id="empty" class="empty-state" style="display:none;">You don't have any appointments yet.</div>
+</div>
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+
+    const resultsEl = document.getElementById("results");
+    const emptyEl = document.getElementById("empty");
+
+    function renderResults(list) {
+        resultsEl.innerHTML = "";
+        if (!list || list.length === 0) {
+            emptyEl.style.display = "block";
+            return;
+        }
+        emptyEl.style.display = "none";
+        list.forEach((appt) => {
+            const row = document.createElement("div");
+            row.className = "result-row";
+            row.innerHTML = `
+        <div>
+          <div class="name">${appt.dateTime ?? ""}</div>
+          <div class="meta">Dr. ${appt.professional?.firstName ?? ""} ${appt.professional?.lastName ?? ""} — ${appt.status ?? ""}</div>
+        </div>
+        <button class="secondary cancel-btn" data-id="${appt.id}">Cancel</button>
+      `;
+            resultsEl.appendChild(row);
+        });
+
+        resultsEl.querySelectorAll(".cancel-btn").forEach((btn) => {
+            btn.addEventListener("click", () => cancelAppointment(btn.dataset.id));
+        });
+    }
+
+    async function loadMyAppointments() {
+        try {
+            const data = await apiFetch("/api/appointments/mine");
+            renderResults(data);
+        } catch (err) {
+            emptyEl.textContent = "Could not load your appointments: " + err.message;
+            emptyEl.style.display = "block";
+        }
+    }
+
+    async function cancelAppointment(id) {
+        if (!confirm("Cancel this appointment?")) return;
+        try {
+            await apiFetch(`/api/appointments/${id}`, { method: "DELETE" });
+            loadMyAppointments();
+        } catch (err) {
+            alert("Could not cancel: " + err.message);
+        }
+    }
+
+    loadMyAppointments();
+</script>
+</body>
+</html>

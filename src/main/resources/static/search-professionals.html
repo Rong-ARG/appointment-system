@@ -49,9 +49,34 @@
           <div class="name">${prof.firstName ?? ""} ${prof.lastName ?? ""}</div>
           <div class="meta">${prof.specialty ?? prof.email ?? ""}</div>
         </div>
+        <button class="request-btn" data-id="${prof.id}">Request appointment</button>
       `;
       resultsEl.appendChild(row);
     });
+
+    resultsEl.querySelectorAll(".request-btn").forEach((btn) => {
+      btn.addEventListener("click", () => requestAppointment(btn.dataset.id));
+    });
+  }
+
+  async function requestAppointment(professionalId) {
+    const dateTimeStr = prompt("Date and time for the appointment (e.g. 2026-09-15T14:30):");
+    if (!dateTimeStr) return;
+    try {
+      const userId = await getMyUserId();
+      await apiFetch("/api/appointments", {
+        method: "POST",
+        body: JSON.stringify({
+          userId,
+          professionalId: Number(professionalId),
+          dateTime: dateTimeStr,
+          status: "PENDING"
+        })
+      });
+      alert("Appointment requested! You can see it in \"My appointments\".");
+    } catch (err) {
+      alert("Could not request appointment: " + err.message);
+    }
   }
   async function loadAll() {
     try {
