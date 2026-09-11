@@ -13,12 +13,9 @@ import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
+import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +28,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final ProfessionalRepository professionalRepository;
     private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
 
     public final Appointment toEntity(AppointmentRequestDTO appointmentRequestDTO) {
         Appointment appointment = new Appointment();
@@ -82,7 +80,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     public List<AppointmentResponseDTO> getMyAppointments(){
-         User user = getAuthenticatedUser();
+         User user = currentUserService.getAuthenticatedUser();
          return appointmentRepository.findByUserId(user.getId()).stream().map(this::toDto).toList();
     }
 
@@ -105,7 +103,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public void deleteAppointmentById(Long id) {
 
-        User user = getAuthenticatedUser();
+        User user = currentUserService.getAuthenticatedUser();
 
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
@@ -117,16 +115,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentRepository.deleteById(id);
     }
 
-    private User getAuthenticatedUser() {
-
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        Authentication authentication = securityContext.getAuthentication();
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        return userRepository.findByAccountEmail(userDetails.getUsername())
-                .orElseThrow(() -> new AccessDeniedException("User with email " + userDetails.getUsername() + " not found"));
-    }
-
     @Override
     @Transactional
     public void patchAppointment(Long id, AppointmentPatchDTO appointmentPatchDTO) {
@@ -134,7 +122,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
-        User user = getAuthenticatedUser();
+        User user = currentUserService.getAuthenticatedUser();
 
         if (!user.getId().equals(appointment.getUser().getId())) {
             throw new AccessDeniedException("User with id " + user.getId() + " not matched");

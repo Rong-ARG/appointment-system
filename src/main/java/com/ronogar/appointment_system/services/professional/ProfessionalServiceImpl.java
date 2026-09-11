@@ -11,7 +11,9 @@ import com.ronogar.appointment_system.models.Account;
 import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.repositories.AccountRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
+import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     private final ProfessionalRepository professionalRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
+    private final CurrentUserService currentUserService;
 
     private Professional toEntity(ProfessionalRequestDTO dto) {
         Professional professional = new Professional();
@@ -139,8 +142,16 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Override
     @Transactional
     public void updateProfessional(Long id, ProfessionalRequestDTO professionalRequestDTO) {
+
         Professional professional = professionalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
+
+
+        Account accountAuth = currentUserService.getAuthenticatedAccount();
+
+        if (!professional.getAccount().getId().equals(accountAuth.getId())) {
+            throw new AccessDeniedException("You are not authorized to perform this action.");
+        }
 
         professional.setFirstName(professionalRequestDTO.getFirstName());
         professional.setLastName(professionalRequestDTO.getLastName());
@@ -160,8 +171,17 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Override
     @Transactional
     public void deleteProfessional(Long id) {
-        Professional professional = professionalRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
+
+        Professional professional = professionalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
+
         Account account = professional.getAccount();
+
+        Account accountAuth = currentUserService.getAuthenticatedAccount();
+
+        if (!account.getId().equals(accountAuth.getId())) {
+            throw new AccessDeniedException("You are not authorized to perform this action");
+        }
         professionalRepository.deleteById(id);
 
         if (account.getUser() == null) {
@@ -176,8 +196,16 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Override
     @Transactional
     public void patchProfessional(Long id, ProfessionalPatchDTO professionalPatchDTO) {
+
         Professional professional1 = professionalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("professional with id: " + id + " not found"));
+
+        Account accountAuth = currentUserService.getAuthenticatedAccount();
+
+        if(!professional1.getAccount().getId().equals(accountAuth.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         if (professionalPatchDTO.getEmail() != null) {
             Account account = professional1.getAccount();
             account.setEmail(professionalPatchDTO.getEmail());

@@ -10,7 +10,9 @@ import com.ronogar.appointment_system.models.Account;
 import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AccountRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
+import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
+    private final CurrentUserService currentUserService;
 
     private User toEntity(UserRequestDTO userRequestDTO) {
         User user = new User();
@@ -107,8 +110,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateUser(Long id, UserRequestDTO userRequestDTO) {
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        User userAuth = currentUserService.getAuthenticatedUser();
+
+        if (!user.getId().equals(userAuth.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
 
         user.setFirstName(userRequestDTO.getFirstName());
         user.setLastName(userRequestDTO.getLastName());
@@ -125,11 +135,19 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUser(Long id) {
-    User user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
-        Account account =  user.getAccount();
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        Account account = user.getAccount();
+
+        User userAuth = currentUserService.getAuthenticatedUser();
+
+        if (!user.getId().equals(userAuth.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
         userRepository.deleteById(id);
-        if(account.getProfessional() == null) {
+        if (account.getProfessional() == null) {
             accountRepository.delete(account);
         } else {
             account.getRoles().remove(Role.USER);
@@ -143,6 +161,11 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        User userAuth = currentUserService.getAuthenticatedUser();
+        if (!user.getId().equals(userAuth.getId())) {
+            throw new AccessDeniedException("Access denied");
+        }
 
         if (userPatchDTO.getFirstName() != null) {
             user.setFirstName(userPatchDTO.getFirstName());
