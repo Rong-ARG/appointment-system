@@ -14,6 +14,7 @@ public interface ProfessionalService {
     ProfessionalResponseDTO getProfessionalByEmail(String email);
     List<ProfessionalResponseDTO> getProfessionalByLastName(String lastName);
     ProfessionalResponseDTO createOwnProfessionalProfile(String email, ProfessionalSelfRequestDTO professionalSelfRequestDTO);
+    List<ProfessionalResponseDTO> getProfessionalsBySpecialty(String specialty);
 
     ProfessionalResponseDTO createProfessional(ProfessionalRequestDTO professionalRequestDTO);
     void updateProfessional(Long id, ProfessionalRequestDTO professionalRequestDTO);

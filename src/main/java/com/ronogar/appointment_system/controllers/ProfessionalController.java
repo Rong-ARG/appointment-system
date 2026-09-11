@@ -64,6 +64,15 @@ public class ProfessionalController {
     public ResponseEntity<List<ProfessionalResponseDTO>> getProfessionalByLastname(@PathVariable String lastname) {
         return ResponseEntity.ok(professionalService.getProfessionalByLastName(lastname));
     }
+    @Operation(summary = "Get professional specialty",description = "Gets professional specialty, example: dentist")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "List of specialty retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Specialty not found")
+    })
+    @GetMapping("/specialty/{specialty}")
+    public ResponseEntity<List<ProfessionalResponseDTO>> getProfessionalSpecialty(@PathVariable String specialty) {
+        return  ResponseEntity.ok(professionalService.getProfessionalsBySpecialty(specialty));
+    }
 
     @Operation(summary = "Create professional", description = "Create a new professional and returns the created resourced")
     @ApiResponses(value = {

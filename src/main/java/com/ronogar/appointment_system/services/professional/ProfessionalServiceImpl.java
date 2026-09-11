@@ -96,6 +96,15 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     }
 
     @Override
+    public List<ProfessionalResponseDTO> getProfessionalsBySpecialty(String specialty) {
+        List<Professional> professionals = professionalRepository.findBySpecialtyContainingIgnoreCase(specialty);
+        if (professionals.isEmpty()) {
+            throw new ResourceNotFoundException("professional with specialty: " + specialty + " not found");
+        }
+        return professionals.stream().map(this::toDto).toList();
+    }
+
+    @Override
     @Transactional
     public ProfessionalResponseDTO createProfessional(ProfessionalRequestDTO professionalRequestDTO) {
         Account account = accountRepository.findByEmail(professionalRequestDTO.getEmail())
@@ -121,6 +130,8 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         Professional saved = professionalRepository.save(professional);
         return toDto(saved);
     }
+
+
 
     private Account attachProfessionalRole(Account account) {
         if (account.getProfessional() != null) {
@@ -202,7 +213,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
         Account accountAuth = currentUserService.getAuthenticatedAccount();
 
-        if(!professional1.getAccount().getId().equals(accountAuth.getId())) {
+        if (!professional1.getAccount().getId().equals(accountAuth.getId())) {
             throw new AccessDeniedException("Access denied");
         }
 

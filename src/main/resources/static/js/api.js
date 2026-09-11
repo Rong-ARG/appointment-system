@@ -14,7 +14,19 @@ function clearToken() {
 }
 
 function isLoggedIn() {
-  return !!getToken();
+  const token = getToken();
+  if (!token) return false;
+
+  const payload = decodeToken();
+  if (!payload || !payload.exp) return false;
+
+  // payload.exp viene en segundos (estándar JWT), Date.now() en milisegundos.
+  const isExpired = Date.now() >= payload.exp * 1000;
+  if (isExpired) {
+    clearToken();
+    return false;
+  }
+  return true;
 }
 
 async function apiFetch(path, options = {}) {
@@ -23,6 +35,11 @@ async function apiFetch(path, options = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+
+  if (response.status === 401) {
+    logout();
+    throw new Error("Session expired, please log in again.");
+  }
 
   let body = null;
   const contentType = response.headers.get("content-type") || "";
@@ -67,10 +84,26 @@ function decodeToken() {
 }
 
 async function getMyUserId() {
+  const user = await getMyUser();
+  return user.id;
+}
+
+async function getMyUser() {
   const payload = decodeToken();
   if (!payload || !payload.sub) {
     throw new Error("Could not read current user from token");
   }
-  const user = await apiFetch(`/api/users/email/${encodeURIComponent(payload.sub)}`);
-  return user.id;
+  return await apiFetch(`/api/users/email/${encodeURIComponent(payload.sub)}`);
+}
+
+async function getMyProfessional() {
+  const payload = decodeToken();
+  if (!payload || !payload.sub) {
+    throw new Error("Could not read current user from token");
+  }
+  try {
+    return await apiFetch(`/api/professionals/email/${encodeURIComponent(payload.sub)}`);
+  } catch {
+    return null;
+  }
 }

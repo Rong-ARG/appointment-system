@@ -28,8 +28,7 @@
     <hr class="ticket-divider">
     <div class="ticket-body">
 
-      <!-- Form: create professional profile (linked to the logged-in account) -->
-      <form id="create-form" novalidate>
+      <form id="profile-form" novalidate style="display:none;">
         <label for="firstName">First name</label>
         <input type="text" id="firstName" required>
 
@@ -48,22 +47,15 @@
         <label for="available">Available to take appointments</label>
         <input type="checkbox" id="available" checked>
 
-        <button type="submit">Create professional profile</button>
-        <div class="status-msg" id="create-status"></div>
+        <button type="submit" id="profile-submit-btn">Create professional profile</button>
+        <div class="status-msg" id="profile-status"></div>
       </form>
 
-      <!-- Form: remove professional profile -->
-      <form id="remove-form" novalidate style="display:none;">
-        <label for="professionalId">Professional profile ID</label>
-        <input type="number" id="professionalId" min="1" required>
-        <div class="field-error">
-          Note: until the Account-Professional relation exists, you need to
-          enter the ID manually. Once implemented, this will fill in on its own.
-        </div>
-
-        <button type="submit" class="danger">Remove profile</button>
+      <div id="remove-panel" style="display:none;">
+        <p id="remove-info"></p>
+        <button id="remove-btn" class="danger">Remove profile</button>
         <div class="status-msg" id="remove-status"></div>
-      </form>
+      </div>
 
     </div>
   </div>
@@ -75,19 +67,81 @@
   document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); logout(); });
 
   const params = new URLSearchParams(window.location.search);
-  const mode = params.get("mode") === "remove" ? "remove" : "create";
+  const mode = params.get("mode") === "remove" ? "remove"
+          : params.get("mode") === "edit" ? "edit"
+                  : "create";
 
-  if (mode === "remove") {
-    document.getElementById("title").textContent = "Stop being a professional";
-    document.getElementById("subtitle").textContent = "This removes your existing professional profile.";
-    document.getElementById("create-form").style.display = "none";
-    document.getElementById("remove-form").style.display = "block";
+  const form = document.getElementById("profile-form");
+  const submitBtn = document.getElementById("profile-submit-btn");
+  const statusEl = document.getElementById("profile-status");
+
+  async function initCreateOrEdit() {
+    form.style.display = "block";
+
+    if (mode === "create") {
+      try {
+        const myUser = await getMyUser();
+        const firstNameInput = document.getElementById("firstName");
+        const lastNameInput = document.getElementById("lastName");
+        firstNameInput.value = myUser.firstName ?? "";
+        lastNameInput.value = myUser.lastName ?? "";
+        firstNameInput.disabled = true;
+        lastNameInput.disabled = true;
+      } catch {
+      }
+    }
+
+    if (mode === "edit") {
+      document.getElementById("title").textContent = "Edit professional profile";
+      document.getElementById("subtitle").textContent = "Update your professional info.";
+      submitBtn.textContent = "Save changes";
+
+      const profile = await getMyProfessional();
+      if (!profile) {
+        form.style.display = "none";
+        showStatus(statusEl, "You don't have a professional profile yet. Create one first.", "error");
+        return;
+      }
+      document.getElementById("firstName").value = profile.firstName ?? "";
+      document.getElementById("lastName").value = profile.lastName ?? "";
+      document.getElementById("phone").value = profile.phone ?? "";
+      document.getElementById("specialty").value = profile.specialty ?? "";
+      document.getElementById("yearsOfExperience").value = profile.yearsOfExperience ?? 0;
+      document.getElementById("available").checked = !!profile.available;
+    }
   }
 
-  // ---- Create professional profile (linked to the authenticated account) ----
-  document.getElementById("create-form").addEventListener("submit", async (event) => {
+  async function initRemove() {
+    document.getElementById("title").textContent = "Stop being a professional";
+    document.getElementById("subtitle").textContent = "This removes your existing professional profile.";
+    document.getElementById("remove-panel").style.display = "block";
+
+    const infoEl = document.getElementById("remove-info");
+    const removeBtn = document.getElementById("remove-btn");
+    const removeStatusEl = document.getElementById("remove-status");
+
+    const profile = await getMyProfessional();
+    if (!profile) {
+      infoEl.textContent = "You don't have a professional profile to remove.";
+      removeBtn.style.display = "none";
+      return;
+    }
+    infoEl.textContent = `You're about to remove your profile as ${profile.specialty} (${profile.firstName} ${profile.lastName}).`;
+
+    removeBtn.addEventListener("click", async () => {
+      if (!confirm("Remove your professional profile?")) return;
+      try {
+        await apiFetch(`/api/professionals/${profile.id}`, { method: "DELETE" });
+        showStatus(removeStatusEl, "Professional profile removed.", "ok");
+        removeBtn.style.display = "none";
+      } catch (err) {
+        showStatus(removeStatusEl, "We couldn't remove the profile: " + err.message, "error");
+      }
+    });
+  }
+
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const statusEl = document.getElementById("create-status");
 
     const payload = {
       firstName: document.getElementById("firstName").value.trim(),
@@ -99,31 +153,31 @@
     };
 
     try {
-      await apiFetch("/api/professionals/me", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-      showStatus(statusEl, "Professional profile created successfully.", "ok");
-      event.target.reset();
+      if (mode === "edit") {
+        const profile = await getMyProfessional();
+        await apiFetch(`/api/professionals/${profile.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        });
+        showStatus(statusEl, "Professional profile updated.", "ok");
+      } else {
+        await apiFetch("/api/professionals/me", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        showStatus(statusEl, "Professional profile created successfully.", "ok");
+        event.target.reset();
+      }
     } catch (err) {
-      showStatus(statusEl, "We couldn't create the profile: " + err.message, "error");
+      showStatus(statusEl, "Something went wrong: " + err.message, "error");
     }
   });
 
-  // ---- Remove professional profile ----
-  document.getElementById("remove-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const statusEl = document.getElementById("remove-status");
-    const id = document.getElementById("professionalId").value;
-
-    try {
-      await apiFetch(`/api/professionals/${id}`, { method: "DELETE" });
-      showStatus(statusEl, "Professional profile removed.", "ok");
-      event.target.reset();
-    } catch (err) {
-      showStatus(statusEl, "We couldn't remove the profile: " + err.message, "error");
-    }
-  });
+  if (mode === "remove") {
+    initRemove();
+  } else {
+    initCreateOrEdit();
+  }
 </script>
 </body>
 </html>

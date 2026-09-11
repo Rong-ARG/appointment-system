@@ -11,4 +11,5 @@ public interface ProfessionalRepository extends JpaRepository<Professional, Long
 
     Optional<Professional> findByAccountEmail(String email);
     List<Professional> findByLastName(String lastName);
+    List<Professional> findBySpecialtyContainingIgnoreCase(String specialty);
 }

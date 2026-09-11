@@ -18,10 +18,10 @@
 </div>
 <div class="page-wrap">
   <h1>Find a professional</h1>
-  <p>We show every registered professional. Filter by last name to find someone specific.</p>
+  <p>We show every registered professional. Filter by specialty to find someone specific.</p>
   <div class="search-row">
-    <label for="lastname-input" class="sr-only">Search by last name</label>
-    <input type="text" id="lastname-input" placeholder="Search by last name (optional)">
+    <label for="specialty-input" class="sr-only">Search by specialty</label>
+    <input type="text" id="specialty-input" placeholder="Search by specialty (e.g. Doc)">
     <button id="search-btn">Search</button>
     <button id="clear-btn" class="secondary">View all</button>
   </div>
@@ -83,25 +83,27 @@
       const data = await apiFetch("/api/professionals");
       renderResults(data);
     } catch (err) {
-      emptyEl.textContent = "Search failed: " + err.message;
+      resultsEl.innerHTML = "";
+      emptyEl.textContent = "Could not load professionals: " + err.message;
       emptyEl.style.display = "block";
     }
   }
-  async function loadByLastname(lastName) {
+  async function loadBySpecialty(specialty) {
     try {
-      const data = await apiFetch(`/api/professionals/lastname/${encodeURIComponent(lastName)}`);
+      const data = await apiFetch(`/api/professionals/specialty/${encodeURIComponent(specialty)}`);
       renderResults(Array.isArray(data) ? data : [data]);
     } catch (err) {
-      emptyEl.textContent = "Search failed: " + err.message;
+      resultsEl.innerHTML = "";
+      emptyEl.textContent = "No professionals found for that specialty.";
       emptyEl.style.display = "block";
     }
   }
   document.getElementById("search-btn").addEventListener("click", () => {
-    const value = document.getElementById("lastname-input").value.trim();
-    if (value) loadByLastname(value); else loadAll();
+    const value = document.getElementById("specialty-input").value.trim();
+    if (value) loadBySpecialty(value); else loadAll();
   });
   document.getElementById("clear-btn").addEventListener("click", () => {
-    document.getElementById("lastname-input").value = "";
+    document.getElementById("specialty-input").value = "";
     loadAll();
   });
   loadAll();
