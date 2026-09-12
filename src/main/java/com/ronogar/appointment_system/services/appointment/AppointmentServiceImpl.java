@@ -7,6 +7,7 @@ import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
+import com.ronogar.appointment_system.models.Account;
 import com.ronogar.appointment_system.models.Appointment;
 import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.models.User;
@@ -103,15 +104,19 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public void deleteAppointmentById(Long id) {
 
-        User user = currentUserService.getAuthenticatedUser();
+        Account account = currentUserService.getAuthenticatedAccount();
 
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
-        if (!appointment.getUser().getId().equals(user.getId())) {
+        boolean isUser = appointment.getUser().getAccount().getId().equals(account.getId());
+
+        boolean isAccount = appointment.getProfessional().getAccount().getId().equals(account.getId());
+
+        if(!isUser && !isAccount){
             throw new AccessDeniedException("Access denied");
         }
-
+        
         appointmentRepository.deleteById(id);
     }
 
@@ -122,15 +127,20 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
-        User user = currentUserService.getAuthenticatedUser();
+        Account account = currentUserService.getAuthenticatedAccount();
 
-        if (!user.getId().equals(appointment.getUser().getId())) {
-            throw new AccessDeniedException("User with id " + user.getId() + " not matched");
+        boolean isUser = account.getId().equals(appointment.getUser().getAccount().getId());
+
+        boolean isProfessional = account.getId().equals(appointment.getProfessional().getAccount().getId());
+
+        if (!isUser && !isProfessional) {
+            throw new AccessDeniedException("Access denied");
         }
 
         if (appointmentPatchDTO.getStatus() != null) {
             appointment.setStatus(appointmentPatchDTO.getStatus());
         }
+
         appointmentRepository.save(appointment);
 
     }

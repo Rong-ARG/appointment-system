@@ -34,6 +34,7 @@ public class CurrentUserService {
         Authentication authentication = securityContext.getAuthentication();
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        return accountRepository.findByEmail(userDetails.getUsername()).orElseThrow(()-> new AccessDeniedException("Account not found"));
+        return accountRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(()-> new AccessDeniedException("Account not found"));
     }
 }
