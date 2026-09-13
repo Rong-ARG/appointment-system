@@ -39,6 +39,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         User user = userRepository.findById(appointmentRequestDTO.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + appointmentRequestDTO.getUserId() + " not found"));
 
+        if (!user.getId().equals(currentUserService.getAuthenticatedUser().getId())) {
+            throw new AccessDeniedException("You are not allowed to perform this action");
+
+        }
         Professional professional = professionalRepository.findById(appointmentRequestDTO.getProfessionalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Professional with id " + appointmentRequestDTO.getProfessionalId() + " not found"));
 
@@ -116,7 +120,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         if(!isUser && !isAccount){
             throw new AccessDeniedException("Access denied");
         }
-        
         appointmentRepository.deleteById(id);
     }
 

@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeRequests -> {
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/", "/error", "/login.html", "/register.html", "/my-appointments.html", "/index.html","/dashboard.html","/search-professionals.html","/become-professional.html", "/css/**", "/js/**", "/favicon.ico").permitAll();
                     authorizeRequests.requestMatchers(HttpMethod.POST, "/auth/login", "/api/users").permitAll();
+                    authorizeRequests.requestMatchers(HttpMethod.POST,"/api/professionals").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/appointments").hasRole("ADMIN");
                     authorizeRequests.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();
@@ -45,7 +46,6 @@ public class SecurityConfig {
                     authorizeRequests.anyRequest().authenticated();
                 }).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class )
                 .build();
-
     }
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {

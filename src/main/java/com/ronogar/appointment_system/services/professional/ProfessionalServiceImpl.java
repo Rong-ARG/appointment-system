@@ -6,6 +6,7 @@ import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalSelfRequestDTO;
 import com.ronogar.appointment_system.enums.Role;
 import com.ronogar.appointment_system.exceptions.DuplicateResourceException;
+import com.ronogar.appointment_system.exceptions.InvalidAccountStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
 import com.ronogar.appointment_system.models.Professional;
@@ -18,9 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -107,13 +106,15 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Override
     @Transactional
     public ProfessionalResponseDTO createProfessional(ProfessionalRequestDTO professionalRequestDTO) {
+
         Account account = accountRepository.findByEmail(professionalRequestDTO.getEmail())
                 .map(this::attachProfessionalRole)
-                .orElseGet(() -> createAccount(professionalRequestDTO));
+                .orElseThrow(() -> new ResourceNotFoundException("Account with email: " + professionalRequestDTO.getEmail() + " not found"));
 
         Professional professional = toEntity(professionalRequestDTO);
         professional.setAccount(account);
         Professional saved = professionalRepository.save(professional);
+
         return toDto(saved);
     }
 
@@ -131,22 +132,16 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         return toDto(saved);
     }
 
-
-
     private Account attachProfessionalRole(Account account) {
+
+        if(account.getUser() == null) {
+            throw new InvalidAccountStateException("Need register to do this action");
+        }
         if (account.getProfessional() != null) {
             throw new DuplicateResourceException(
                     "A professional profile already exists for email " + account.getEmail());
         }
         account.getRoles().add(Role.PROFESSIONAL);
-        return accountRepository.save(account);
-    }
-
-    private Account createAccount(ProfessionalRequestDTO professionalRequestDTO) {
-        Account account = new Account();
-        account.setEmail(professionalRequestDTO.getEmail());
-        account.setPassword(passwordEncoder.encode(professionalRequestDTO.getPassword()));
-        account.setRoles(new HashSet<>(Set.of(Role.PROFESSIONAL)));
         return accountRepository.save(account);
     }
 
