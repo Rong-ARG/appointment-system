@@ -84,16 +84,20 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public List<AppointmentResponseDTO> getMyAppointments(){
-         User user = currentUserService.getAuthenticatedUser();
-         return appointmentRepository.findByUserId(user.getId()).stream().map(this::toDto).toList();
+    public List<AppointmentResponseDTO> getMyAppointments() {
+        User user = currentUserService.getAuthenticatedUser();
+        return appointmentRepository.findByUserId(user.getId()).stream().map(this::toDto).toList();
     }
 
     @Override
     public AppointmentResponseDTO getAppointmentById(Long id) {
-        return appointmentRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
+
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment with id " + id + " not found"));
+        verifyOwner(appointment);
+
+
+        return toDto(appointment);
     }
 
     @Override
@@ -108,18 +112,11 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public void deleteAppointmentById(Long id) {
 
-        Account account = currentUserService.getAuthenticatedAccount();
-
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
-        boolean isUser = appointment.getUser().getAccount().getId().equals(account.getId());
+        verifyOwner(appointment);
 
-        boolean isAccount = appointment.getProfessional().getAccount().getId().equals(account.getId());
-
-        if(!isUser && !isAccount){
-            throw new AccessDeniedException("Access denied");
-        }
         appointmentRepository.deleteById(id);
     }
 
@@ -130,21 +127,24 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
-        Account account = currentUserService.getAuthenticatedAccount();
+        verifyOwner(appointment);
 
-        boolean isUser = account.getId().equals(appointment.getUser().getAccount().getId());
-
-        boolean isProfessional = account.getId().equals(appointment.getProfessional().getAccount().getId());
-
-        if (!isUser && !isProfessional) {
-            throw new AccessDeniedException("Access denied");
-        }
 
         if (appointmentPatchDTO.getStatus() != null) {
             appointment.setStatus(appointmentPatchDTO.getStatus());
         }
 
         appointmentRepository.save(appointment);
+    }
 
+    private void verifyOwner(Appointment appointment) {
+        Account account = currentUserService.getAuthenticatedAccount();
+
+        boolean isUser = account.getId().equals(appointment.getUser().getAccount().getId());
+        boolean isProfessional = appointment.getProfessional().getAccount().getId().equals(account.getId());
+
+        if (!isUser && !isProfessional) {
+            throw new AccessDeniedException("Access denied");
+        }
     }
 }

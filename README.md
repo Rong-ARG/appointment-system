@@ -112,8 +112,9 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 
 ## Known Issues
 
-- ~~Users could create appointments on behalf of other users userId in the request body wasn't checked against the logged-in user.~~
-- ~~A Professional could be created without an existing User account — broke the "user first, professional later" model.~~
-- ~~Anyone could turn someone else's account into a professional — POST /api/professionals is now ADMIN-only, self-service is done through /me.~~
-- `GET /api/appointments/{id}` and `GET /api/appointments` don't check if the logged-in user is actually involved in the appointment — any authenticated user could view any appointment by guessing/incrementing the ID.
+- ~~Users could create appointments on behalf of other users~~ — `userId` in the request body wasn't checked against the logged-in user.
+- ~~A `Professional` could be created without an existing `User` account~~ — broke the "user first, professional later" model.
+- ~~Anyone could turn someone else's account into a professional ~~ — `POST /api/professionals` is now ADMIN-only, self-service is done through `/me`.
+- ~~`GET /api/appointments/{id}` (and delete/patch) didn't check if the logged-in user was actually involved in the appointment~~ — added an ownership check (`verifyOwner`) shared across those methods.
 - If a `Professional`-only account (no `User` profile) calls an endpoint that expects a `User`, it throws a generic "not found" error instead of a clear message.
+- A `Professional` can end up with no `User` after all, if they delete their `User` profile while still having a professional profile — `deleteUser` just strips the `USER` role instead of removing the account. Also need to decide what happens to a professional's existing appointments if they try to delete their account.
