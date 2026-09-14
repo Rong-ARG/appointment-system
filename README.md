@@ -53,7 +53,7 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
    ./mvnw spring-boot:run
    ```
 5. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
-6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow.
+6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow. There's also a `profile.html` page to edit your info or delete your account.
 
 ## API Endpoints
 
@@ -119,3 +119,4 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - ~~Confusing error message when a professional-only account hits an endpoint that expects a user profile~~ — now says clearly that the account has no user profile.
 - ~~A professional could delete their account while still having pending appointments, leaving them orphaned~~ — `deleteProfessional` now blocks the deletion if the professional still has appointments.
 - ~~`deleteUser` still leaves a `Professional` profile orphaned (no `User`) if that account also has a professional profile~~ — `deleteUser` now blocks the deletion if the account still has a professional profile (must delete that first) or if the user has pending appointments as a client.
+- ~~Backend error messages weren't showing up on the frontend (always showed a generic "Error 409" instead of the real message)~~ — exception handlers in `GlobalExceptionHandler` were returning plain text instead of JSON, but the frontend's `apiFetch` only parses the response body when the `Content-Type` is `application/json`. Now every handler returns `{ "message": "..." }`.

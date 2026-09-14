@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My profile — Appointment System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+    <a href="dashboard.html" class="brand">Appointment System</a>
+    <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="#" id="logout-link">Log out</a>
+    </nav>
+</div>
+<div class="page-wrap">
+    <h1>My profile</h1>
+    <p>Update your personal information, or delete your account.</p>
+
+    <div class="ticket" style="max-width: 480px;">
+        <div class="ticket-body">
+            <form id="profile-form" novalidate>
+                <label for="firstName">First name</label>
+                <input type="text" id="firstName" required>
+                <label for="lastName">Last name</label>
+                <input type="text" id="lastName" required>
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" required>
+                <button type="submit">Save changes</button>
+                <div class="status-msg" id="status"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="ticket" style="max-width: 480px; margin-top: 24px;">
+        <div class="ticket-head">
+            <h1 style="font-size: 1.1rem;">Delete account</h1>
+            <p>This will permanently remove your account. You can't undo this.</p>
+        </div>
+        <hr class="ticket-divider">
+        <div class="ticket-body">
+            <button type="button" id="delete-btn" class="danger">Delete my account</button>
+            <div class="status-msg" id="delete-status"></div>
+        </div>
+    </div>
+</div>
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+
+    const form = document.getElementById("profile-form");
+    const statusEl = document.getElementById("status");
+    const deleteBtn = document.getElementById("delete-btn");
+    const deleteStatusEl = document.getElementById("delete-status");
+
+    let currentUserId = null;
+
+    async function loadProfile() {
+        try {
+            const user = await getMyUser();
+            currentUserId = user.id;
+            document.getElementById("firstName").value = user.firstName ?? "";
+            document.getElementById("lastName").value = user.lastName ?? "";
+            document.getElementById("email").value = user.email ?? "";
+            document.getElementById("phone").value = user.phone ?? "";
+        } catch (err) {
+            showStatus(statusEl, "Could not load your profile: " + err.message, "error");
+        }
+    }
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!currentUserId) return;
+
+        const payload = {
+            firstName: document.getElementById("firstName").value.trim(),
+            lastName: document.getElementById("lastName").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            phone: document.getElementById("phone").value.trim(),
+        };
+
+        try {
+            await apiFetch(`/api/users/${currentUserId}`, {
+                method: "PATCH",
+                body: JSON.stringify(payload),
+            });
+            showStatus(statusEl, "Profile updated.", "ok");
+        } catch (err) {
+            showStatus(statusEl, "Could not update your profile: " + err.message, "error");
+        }
+    });
+
+    deleteBtn.addEventListener("click", async () => {
+        if (!currentUserId) return;
+        const confirmed = confirm(
+            "Are you sure you want to delete your account? This can't be undone.\n\n" +
+            "Note: if you still have a professional profile or pending appointments, this will fail until those are cleared."
+        );
+        if (!confirmed) return;
+
+        try {
+            await apiFetch(`/api/users/${currentUserId}`, { method: "DELETE" });
+            clearToken();
+            window.location.href = "login.html";
+        } catch (err) {
+            showStatus(deleteStatusEl, "Could not delete your account: " + err.message, "error");
+        }
+    });
+
+    loadProfile();
+</script>
+</body>
+</html>
