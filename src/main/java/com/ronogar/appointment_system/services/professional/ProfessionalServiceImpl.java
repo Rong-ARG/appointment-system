@@ -9,8 +9,10 @@ import com.ronogar.appointment_system.exceptions.DuplicateResourceException;
 import com.ronogar.appointment_system.exceptions.InvalidAccountStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
+import com.ronogar.appointment_system.models.Appointment;
 import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.repositories.AccountRepository;
+import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
     private final CurrentUserService currentUserService;
+    private final AppointmentRepository appointmentRepository;
 
     private Professional toEntity(ProfessionalRequestDTO dto) {
         Professional professional = new Professional();
@@ -187,6 +190,11 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
         if (!account.getId().equals(accountAuth.getId())) {
             throw new AccessDeniedException("You are not authorized to perform this action");
+        }
+
+        List<Appointment> appointments = appointmentRepository.findByProfessionalId(id);
+        if(!appointments.isEmpty()) {
+            throw new InvalidAccountStateException("You have appointments.");
         }
         professionalRepository.deleteById(id);
 

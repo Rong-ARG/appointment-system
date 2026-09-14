@@ -5,10 +5,13 @@ import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.Role;
 import com.ronogar.appointment_system.exceptions.DuplicateResourceException;
+import com.ronogar.appointment_system.exceptions.InvalidAccountStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
+import com.ronogar.appointment_system.models.Appointment;
 import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AccountRepository;
+import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final AccountRepository accountRepository;
     private final CurrentUserService currentUserService;
+    private final AppointmentRepository appointmentRepository;
 
     private User toEntity(UserRequestDTO userRequestDTO) {
         User user = new User();
@@ -146,13 +150,18 @@ public class UserServiceImpl implements UserService {
         if (!user.getId().equals(userAuth.getId())) {
             throw new AccessDeniedException("Access denied");
         }
-        userRepository.deleteById(id);
-        if (account.getProfessional() == null) {
-            accountRepository.delete(account);
-        } else {
-            account.getRoles().remove(Role.USER);
-            accountRepository.save(account);
+
+        List<Appointment> appointments = appointmentRepository.findByUserId(id);
+        if(account.getProfessional() != null){
+            throw new InvalidAccountStateException("You need delete your professional profile");
         }
+
+        if (!appointments.isEmpty()) {
+            throw new InvalidAccountStateException("Not allowed delete account with appointments");
+        }
+
+        userRepository.deleteById(id);
+        accountRepository.deleteById(account.getId());
     }
 
     @Override

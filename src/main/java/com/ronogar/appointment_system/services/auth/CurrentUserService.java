@@ -26,7 +26,7 @@ public class CurrentUserService {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
         return userRepository.findByAccountEmail(userDetails.getUsername())
-                .orElseThrow(() -> new AccessDeniedException("User with email " + userDetails.getUsername() + " not found"));
+                .orElseThrow(() -> new AccessDeniedException("No user profile found for this account"));
     }
 
     public Account getAuthenticatedAccount() {
