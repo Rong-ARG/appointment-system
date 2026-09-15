@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My appointments (professional) — Appointment System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+    <a href="dashboard.html" class="brand">Appointment System</a>
+    <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="#" id="logout-link">Log out</a>
+    </nav>
+</div>
+<div class="page-wrap">
+    <h1>Appointments booked with me</h1>
+    <p>Confirm or cancel the appointments users have requested with you.</p>
+
+    <div id="list" class="result-list"></div>
+    <div class="empty-state" id="empty" style="display:none;">
+        <p>No appointments booked with you yet.</p>
+    </div>
+    <div class="status-msg" id="status"></div>
+</div>
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    document.getElementById("logout-link").addEventListener("click", (e) => { e.preventDefault(); logout(); });
+
+    const listEl = document.getElementById("list");
+    const emptyEl = document.getElementById("empty");
+    const statusEl = document.getElementById("status");
+
+    function statusBadgeClass(status) {
+        if (status === "CONFIRMED") return "badge badge-ok";
+        if (status === "CANCELLED") return "badge badge-error";
+        return "badge badge-pending";
+    }
+
+    function formatDate(dateTimeStr) {
+        const d = new Date(dateTimeStr);
+        return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    }
+
+    async function updateStatus(id, newStatus) {
+        try {
+            await apiFetch(`/api/appointments/${id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: newStatus }),
+            });
+            showStatus(statusEl, `Appointment ${newStatus.toLowerCase()}.`, "ok");
+            loadAppointments();
+        } catch (err) {
+            showStatus(statusEl, "Could not update appointment: " + err.message, "error");
+        }
+    }
+
+    async function loadAppointments() {
+        listEl.innerHTML = "";
+        try {
+            const appointments = await apiFetch("/api/appointments/mineProf");
+
+            if (!appointments.length) {
+                emptyEl.style.display = "block";
+                return;
+            }
+            emptyEl.style.display = "none";
+
+            appointments.forEach((appt) => {
+                const row = document.createElement("div");
+                row.className = "result-row";
+
+                const actions = appt.status === "PENDING"
+                    ? `<button class="confirm-btn" data-id="${appt.id}" data-status="CONFIRMED">Confirm</button>
+             <button class="secondary cancel-btn" data-id="${appt.id}" data-status="CANCELLED">Cancel</button>`
+                    : "";
+
+                row.innerHTML = `
+          <div>
+            <strong>${appt.user.firstName} ${appt.user.lastName}</strong>
+            <span class="${statusBadgeClass(appt.status)}">${appt.status}</span>
+            <p>${formatDate(appt.dateTime)}</p>
+            <p>${appt.user.email} · ${appt.user.phone ?? ""}</p>
+          </div>
+          <div class="row-actions">${actions}</div>
+        `;
+                listEl.appendChild(row);
+            });
+
+            listEl.querySelectorAll("button[data-id]").forEach((btn) => {
+                btn.addEventListener("click", () => updateStatus(btn.dataset.id, btn.dataset.status));
+            });
+        } catch (err) {
+            showStatus(statusEl, "Could not load your appointments: " + err.message, "error");
+        }
+    }
+
+    loadAppointments();
+</script>
+</body>
+</html>

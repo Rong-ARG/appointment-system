@@ -48,4 +48,11 @@ public class GlobalExceptionHandler {
         errors.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errors);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("message", "Something went wrong. Please try again.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
 }

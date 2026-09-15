@@ -202,6 +202,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
             accountRepository.delete(account);
         } else {
             account.getRoles().remove(Role.PROFESSIONAL);
+            account.setProfessional(null);
             accountRepository.save(account);
         }
     }

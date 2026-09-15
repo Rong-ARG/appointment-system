@@ -53,7 +53,7 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
    ./mvnw spring-boot:run
    ```
 5. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
-6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow. There's also a `profile.html` page to edit your info or delete your account.
+6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow. There's also a `profile.html` page to edit your info or delete your account, and a `professional-appointments.html` page for professionals to confirm/cancel appointments booked with them.
 
 ## API Endpoints
 
@@ -84,6 +84,7 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 | GET | /api/professionals/{id} | Get professional by ID |
 | GET | /api/professionals/email/{email} | Get professional by email |
 | GET | /api/professionals/lastname/{lastName} | Get professionals by last name |
+| GET | /api/professionals/specialty/{specialty} | Get professionals by specialty |
 | POST | /api/professionals | Create professional (ADMIN only) |
 | POST | /api/professionals/me | Become a professional yourself (self-service, requires an existing user account) |
 | PUT | /api/professionals/{id} | Update professional |
@@ -97,6 +98,7 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 | GET | /api/appointments | Get all appointments |
 | GET | /api/appointments/{id} | Get appointment by ID |
 | GET | /api/appointments/mine | Get the logged-in user's own appointments |
+| GET | /api/appointments/mineProf | Get appointments booked with the logged-in professional |
 | POST | /api/appointments | Create appointment |
 | PATCH | /api/appointments/{id} | Update appointment status |
 | DELETE | /api/appointments/{id} | Delete appointment |
@@ -120,3 +122,4 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - ~~A professional could delete their account while still having pending appointments, leaving them orphaned~~ — `deleteProfessional` now blocks the deletion if the professional still has appointments.
 - ~~`deleteUser` still leaves a `Professional` profile orphaned (no `User`) if that account also has a professional profile~~ — `deleteUser` now blocks the deletion if the account still has a professional profile (must delete that first) or if the user has pending appointments as a client.
 - ~~Backend error messages weren't showing up on the frontend (always showed a generic "Error 409" instead of the real message)~~ — exception handlers in `GlobalExceptionHandler` were returning plain text instead of JSON, but the frontend's `apiFetch` only parses the response body when the `Content-Type` is `application/json`. Now every handler returns `{ "message": "..." }`.
+- ~~Removing a professional profile could throw a raw Hibernate error (`ObjectDeletedException`) straight to the user~~ — `Account` still held an in-memory reference to the already-deleted `Professional` (cascade tried to re-save it). Fixed by clearing the reference (`account.setProfessional(null)`) before saving. Also added a catch-all exception handler so any future unexpected error returns a safe generic message instead of leaking internal details.

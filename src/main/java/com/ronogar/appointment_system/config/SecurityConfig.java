@@ -29,6 +29,7 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthFilter jwtAuthFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
@@ -36,17 +37,18 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(authenticationEntryPoint()))
                 .authorizeHttpRequests(authorizeRequests -> {
-                    authorizeRequests.requestMatchers(HttpMethod.GET, "/", "/error", "/login.html", "/register.html", "/my-appointments.html","/profile.html", "/index.html","/dashboard.html","/search-professionals.html","/become-professional.html", "/css/**", "/js/**", "/favicon.ico").permitAll();
+                    authorizeRequests.requestMatchers(HttpMethod.GET, "/", "/error", "/professional-appointments.html", "/login.html", "/register.html", "/my-appointments.html", "/profile.html", "/index.html", "/dashboard.html", "/search-professionals.html", "/become-professional.html", "/css/**", "/js/**", "/favicon.ico").permitAll();
                     authorizeRequests.requestMatchers(HttpMethod.POST, "/auth/login", "/api/users").permitAll();
-                    authorizeRequests.requestMatchers(HttpMethod.POST,"/api/professionals").hasRole("ADMIN");
+                    authorizeRequests.requestMatchers(HttpMethod.POST, "/api/professionals").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/appointments").hasRole("ADMIN");
                     authorizeRequests.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();
 
                     authorizeRequests.anyRequest().authenticated();
-                }).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class )
+                }).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, authException) -> {

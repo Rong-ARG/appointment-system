@@ -90,6 +90,18 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
+    public List<AppointmentResponseDTO> getAppointmentOfProfessionals() {
+        Account account = currentUserService.getAuthenticatedAccount();
+        Professional professional = account.getProfessional();
+
+        if (professional == null) {
+            throw new AccessDeniedException("You are not a professional");
+        }
+
+        return appointmentRepository.findByProfessionalId(professional.getId()).stream().map(this::toDto).toList();
+    }
+
+    @Override
     public AppointmentResponseDTO getAppointmentById(Long id) {
 
         Appointment appointment = appointmentRepository.findById(id)
