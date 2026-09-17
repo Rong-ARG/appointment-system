@@ -10,17 +10,23 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 @Component
 public class JwtService {
+
     @Value("${security.jwt.key.private}")
     private String privateKey;
+
     @Value("${security.jwt.user.generator}")
     private String userGenerator;
+
+    @Value("${security.jwt.expiration.time}")
+    private long expirationTime;
+
     public String createToken(Authentication authentication) {
         Algorithm algorithm = Algorithm.HMAC256(this.privateKey);
         return JWT.create()
                 .withIssuer(this.userGenerator)
                 .withSubject(authentication.getName())
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 1800000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationTime))
                 .sign(algorithm);
     }
     public DecodedJWT validateToken(String token) {

@@ -59,9 +59,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponseDTO getUserById(Long id) {
-        return userRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("user with id: " + id + " not found"));
+
+        User userData = currentUserService.getAuthenticatedUser();
+
+        Account account = currentUserService.getAuthenticatedAccount();
+
+
+
+        if (!user.getId().equals(userData.getId()) && !account.getRoles().contains(Role.ADMIN)) {
+            throw new AccessDeniedException("Access denied");
+        }
+        return toDto(user);
     }
 
     @Override
