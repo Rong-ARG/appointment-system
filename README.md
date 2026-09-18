@@ -15,6 +15,7 @@ for my first job as a backend developer :)
 - Jakarta Validation
 - springdoc-openapi 2.8.9
 - Spring Security + JWT (auth0/java-jwt)
+- JUnit 5 + Mockito
 
 ## Notes
 
@@ -110,7 +111,7 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
-- [ ] Unit testing (JUnit)
+- [ ] Unit testing (in progress — UserServiceImpl covered so far)
 
 ## Known Issues
 
@@ -123,3 +124,6 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - ~~`deleteUser` still leaves a `Professional` profile orphaned (no `User`) if that account also has a professional profile~~ — `deleteUser` now blocks the deletion if the account still has a professional profile (must delete that first) or if the user has pending appointments as a client.
 - ~~Backend error messages weren't showing up on the frontend (always showed a generic "Error 409" instead of the real message)~~ — exception handlers in `GlobalExceptionHandler` were returning plain text instead of JSON, but the frontend's `apiFetch` only parses the response body when the `Content-Type` is `application/json`. Now every handler returns `{ "message": "..." }`.
 - ~~Removing a professional profile could throw a raw Hibernate error (`ObjectDeletedException`) straight to the user~~ — `Account` still held an in-memory reference to the already-deleted `Professional` (cascade tried to re-save it). Fixed by clearing the reference (`account.setProfessional(null)`) before saving. Also added a catch-all exception handler so any future unexpected error returns a safe generic message instead of leaking internal details.
+- ~~Any authenticated user could look up another user's full profile by id (`GET /api/users/{id}`)~~ — added an ownership check so only the user themself or an ADMIN can access it.
+- ~~JWT expiration time was hardcoded in `JwtService`~~ — moved to `application.properties`.
+- ~~`JwtAuthFilter` silently swallowed all token validation errors with no logging~~ — added a debug log so failures are traceable without exposing details to the client.

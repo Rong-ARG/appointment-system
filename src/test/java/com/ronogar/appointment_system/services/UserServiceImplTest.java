@@ -2,11 +2,15 @@ package com.ronogar.appointment_system.services;
 
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.Role;
+import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
 import com.ronogar.appointment_system.models.User;
+import com.ronogar.appointment_system.repositories.AccountRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
+import com.ronogar.appointment_system.services.user.UserService;
 import com.ronogar.appointment_system.services.user.UserServiceImpl;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,10 +32,42 @@ public class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private AccountRepository accountRepository;
+
+    @Mock
     private CurrentUserService currentUserService;
 
     @InjectMocks
     private UserServiceImpl userService;
+
+    @Test
+    public void getAllUsers() {
+
+        Account account = new Account();
+        account.setEmail("iwannajob@gmail.com");
+
+
+        User user = new User();
+        user.setFirstName("Ariel");
+        user.setAccount(account);
+
+        when(userRepository.findAll()).thenReturn(List.of(user));
+
+        List<UserResponseDTO> result = userService.getAllUsers();
+
+        assertEquals(1, result.size());
+        assertEquals("Ariel", result.get(0).getFirstName());
+    }
+
+    @Test
+    public void getAllUsers_returnsEmptyList_whenNoUsersExist() {
+
+        when(userRepository.findAll()).thenReturn(List.of());
+
+        List<UserResponseDTO> result = userService.getAllUsers();
+
+        assertEquals(0, result.size());
+    }
 
     @Test
     public void getUserById_returnsUser_WhenIsOwnProfile() {
@@ -103,4 +140,50 @@ public class UserServiceImplTest {
         assertEquals("Juan", result.getFirstName());
 
     }
+
+    @Test
+    public void getUserByEmail_returnsUser_WhenIsSearchUser() {
+        Account account = new Account();
+        account.setEmail("Iwannajob@gmail.c");
+
+        User user = new User();
+        user.setAccount(account);
+
+        when(userRepository.findByAccountEmail("Iwannajob@gmail.c")).thenReturn(Optional.of(user));
+
+        UserResponseDTO result = userService.getUserByEmail("Iwannajob@gmail.c");
+
+        assertNotNull(result);
+        assertEquals("Iwannajob@gmail.c", result.getEmail());
+    }
+
+    @Test
+    public void getUserByEmail_throwsResourceNotFound_whenEmailNotFound() {
+
+        when(userRepository.findByAccountEmail("Iwannajob@gmail.c")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.getUserByEmail("Iwannajob@gmail.c"));
+    }
+
+    @Test
+    public void getUserByLastname_returnsUser_WhenIsSearchUser() {
+
+        Account account = new Account();
+        account.setEmail("Iwannajob@gmail.c");
+
+        User user = new User();
+        user.setLastName("llanos");
+        user.setAccount(account);
+
+        when(userRepository.findByLastName("llanos")).thenReturn(List.of(user));
+
+        List<UserResponseDTO> result = userService.getUserByLastName("llanos");
+
+        assertNotNull(result);
+        assertEquals("llanos", result.get(0).getLastName());
+
+
+    }
 }
+
+
