@@ -4,10 +4,14 @@ import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.Role;
 import com.ronogar.appointment_system.exceptions.DuplicateResourceException;
+import com.ronogar.appointment_system.exceptions.InvalidAccountStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
+import com.ronogar.appointment_system.models.Appointment;
+import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AccountRepository;
+import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import com.ronogar.appointment_system.services.user.UserServiceImpl;
@@ -40,6 +44,9 @@ public class UserServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AppointmentRepository appointmentRepository;
 
 
     @Mock
@@ -290,6 +297,90 @@ public class UserServiceImplTest {
         assertThrows(AccessDeniedException.class,
                 () -> userService.updateUser(1L, new UserRequestDTO()));
 
+    }
+
+    @Test
+    public void deleteUser_deleteUser_WhenIsDeleteUser() { // +10 in named method xD
+
+        Account account = new Account();
+        account.setId(1L);
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(appointmentRepository.findByUserId(1L)).thenReturn(List.of());
+
+        userService.deleteUser(1L);
+
+        verify(userRepository).deleteById(1L);
+        verify(accountRepository).deleteById(1L);
+    }
+
+    @Test
+    public void deleteUser_throwsAccessDeniedException_WhenNotIsUser() {
+
+        Account account = new Account();
+        account.setId(1L);
+
+        User user2 = new User();
+        user2.setId(2L);
+        user2.setAccount(account);
+
+        User user = new User();
+        user.setId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user2));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        assertThrows(AccessDeniedException.class,
+                () -> userService.deleteUser(1L));
+    }
+
+    @Test
+    public void deleteUser_throwsInvalidAccountStateException_WhenIsProfessional() {
+
+        Professional professional = new Professional();
+        professional.setId(1L);
+        professional.setSpecialty("Welder");
+
+        Account account = new Account();
+        account.setId(1L);
+        account.setProfessional(professional);
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+
+        assertThrows(InvalidAccountStateException.class,
+                () -> userService.deleteUser(1L));
+    }
+
+    @Test
+    public void deleteUser_throwsInvalidAccountStateException_WhenUserHaveAppointment() {
+
+
+        Account account = new Account();
+        account.setId(1L);
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        Appointment appointment = new Appointment();
+        appointment.setId(1L);
+        appointment.setUser(user);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(appointmentRepository.findByUserId(1L)).thenReturn(List.of(appointment));
+
+        assertThrows(InvalidAccountStateException.class,
+                () -> userService.deleteUser(1L));
     }
 
 
