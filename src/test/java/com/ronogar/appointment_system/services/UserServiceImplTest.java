@@ -1,5 +1,6 @@
 package com.ronogar.appointment_system.services;
 
+import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.Role;
@@ -383,5 +384,75 @@ public class UserServiceImplTest {
                 () -> userService.deleteUser(1L));
     }
 
+    @Test
+    public void patchUser_ReturnsUser_WhenIsPatchUser() {
 
+        UserPatchDTO userPatchDTO = new UserPatchDTO();
+        userPatchDTO.setFirstName("Juan");
+
+        User user = new User();
+        user.setId(1L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+
+        userService.patchUser(user.getId(), userPatchDTO);
+
+        assertNull(user.getLastName());
+        assertEquals("Juan", user.getFirstName());
+    }
+
+    @Test
+    public void patchUser_PatchEmail_WhenIsPatchEmail() {
+
+        UserPatchDTO userPatchDTO = new UserPatchDTO();
+        userPatchDTO.setEmail("NewEmail@gmail.com");
+
+        Account account = new Account();
+        account.setId(1L);
+        account.setEmail("Iwannajob@gmail.com");
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(accountRepository.save(any(Account.class))).thenAnswer(i -> i.getArgument(0));
+
+        userService.patchUser(user.getId(), userPatchDTO);
+
+        assertEquals("NewEmail@gmail.com", account.getEmail());
+        verify(accountRepository).save(any(Account.class));
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    public void patchUser_throwsAccessDeniedException_WhenNotMatchUser() {
+
+        Account account = new Account();
+        account.setId(1L);
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        User user2 = new User();
+        user2.setId(2L);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user2);
+
+        assertThrows(AccessDeniedException.class,
+                () -> userService.patchUser(1L, new UserPatchDTO()));
+    }
+
+    @Test
+    public void patchUser_throwsResourceNotFoundException_WhenUserDoesNotExist() {
+
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> userService.patchUser(1L, new UserPatchDTO()));
+    }
 }

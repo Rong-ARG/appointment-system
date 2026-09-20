@@ -111,7 +111,8 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
-- [ ] Unit testing (in progress — UserServiceImpl covered so far)
+- [x] Unit testing — UserServiceImpl fully covered (21 tests)
+- [ ] Unit testing — remaining services (Professional, Appointment, Auth)
 
 ## Known Issues
 
