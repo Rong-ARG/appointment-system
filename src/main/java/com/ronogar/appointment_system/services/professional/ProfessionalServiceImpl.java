@@ -99,7 +99,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
     @Override
     public List<ProfessionalResponseDTO> getProfessionalsBySpecialty(String specialty) {
-        List<Professional> professionals = professionalRepository.findBySpecialtyContainingIgnoreCase(specialty);
+        List<Professional> professionals = professionalRepository.findBySpecialty(specialty);
         if (professionals.isEmpty()) {
             throw new ResourceNotFoundException("professional with specialty: " + specialty + " not found");
         }
