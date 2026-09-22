@@ -1,5 +1,6 @@
 package com.ronogar.appointment_system.services;
 
+import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalSelfRequestDTO;
@@ -313,7 +314,7 @@ public class ProfessionalServiceImplTest {
     }
 
     @Test
-    void updateProfessional_ReturnsUpdatedProfessional_WhenSuccessful() {
+    void updateProfessional_updatesFields_whenSuccessful() {
 
         ProfessionalRequestDTO professionalRequestDTO = new ProfessionalRequestDTO();
         professionalRequestDTO.setEmail("SomethingElse@gmail.com");
@@ -340,8 +341,6 @@ public class ProfessionalServiceImplTest {
 
         professionalService.updateProfessional(1L, professionalRequestDTO);
 
-        assertNotNull(account);
-        assertNotNull(professional);
         assertEquals("Juan", professional.getFirstName());
         assertEquals("Torres", professional.getLastName());
         assertEquals("12345", account.getPassword());
@@ -379,11 +378,11 @@ public class ProfessionalServiceImplTest {
         when(currentUserService.getAuthenticatedAccount()).thenReturn(accountAuth);
 
         assertThrows(AccessDeniedException.class,
-                () -> professionalService.updateProfessional(1L, new  ProfessionalRequestDTO()));
+                () -> professionalService.updateProfessional(1L, new ProfessionalRequestDTO()));
     }
 
     @Test
-    void deleteProfessional_ReturnsDeletedProfessional_WhenSuccessful() {
+    void deleteProfessional_deletesAccount_whenSuccessful() {
 
         Account account = new Account();
         account.setId(1L);
@@ -404,4 +403,160 @@ public class ProfessionalServiceImplTest {
 
     }
 
+    @Test
+    void deleteProfessional_ThrowsResourceNotFoundException_WhenProfessionalNotFound() {
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> professionalService.deleteProfessional(1L));
+    }
+
+    @Test
+    void deleteProfessional_ThrowsAccessDenied_WhenAccountsNotMatching() {
+
+        Account accountAuth = new Account();
+        accountAuth.setId(2L);
+
+        Account account = new Account();
+        account.setId(1L);
+
+        Professional professional = new Professional();
+        professional.setId(1L);
+        professional.setAccount(account);
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.of(professional));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(accountAuth);
+
+        assertThrows(AccessDeniedException.class,
+                () -> professionalService.deleteProfessional(1L));
+    }
+
+    @Test
+    void deleteProfessional_ThrowsInvalidAccountStateException_WhenAccountHaveAppointment() {
+        Account account = new Account();
+        account.setId(1L);
+
+        Account accountAuth = new Account();
+        accountAuth.setId(1L);
+
+        Professional professional = new Professional();
+        professional.setId(1L);
+        professional.setAccount(account);
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.of(professional));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(accountAuth);
+        when(appointmentRepository.findByProfessionalId(1L)).thenReturn(List.of(new Appointment()));
+
+        assertThrows(InvalidAccountStateException.class,
+                () -> professionalService.deleteProfessional(1L));
+    }
+
+    @Test
+    void deleteProfessional_RemoveUserRole_WhenSuccessfullyDeleted() {
+
+        Account account = new Account();
+        account.setId(1L);
+        account.setUser(new User());
+        account.setRoles(new HashSet<>(Set.of(Role.PROFESSIONAL, Role.USER)));
+
+        Account accountAuth = new Account();
+        accountAuth.setId(1L);
+
+        Professional professional = new Professional();
+        professional.setId(1L);
+        professional.setAccount(account);
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.of(professional));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(accountAuth);
+        when(appointmentRepository.findByProfessionalId(1L)).thenReturn(List.of());
+        when(accountRepository.save(any(Account.class))).thenAnswer(i -> i.getArgument(0));
+
+        professionalService.deleteProfessional(1L);
+
+        assertTrue(account.getRoles().contains(Role.USER));
+        assertFalse(account.getRoles().contains(Role.PROFESSIONAL));
+        assertNull(account.getProfessional());
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void patchProfessional_ReturnsPatchedProfessional_WhenSuccessfullyPatched() {
+
+        ProfessionalPatchDTO professionalPatchDTO = new ProfessionalPatchDTO();
+        professionalPatchDTO.setPhone("6516548");
+        professionalPatchDTO.setFirstName("John");
+        professionalPatchDTO.setLastName("Cena");
+        professionalPatchDTO.setSpecialty("coffee man");
+
+        Professional professional = new Professional();
+        professional.setId(1L);
+
+        Account account = new Account();
+        account.setId(1L);
+        professional.setAccount(account);
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.of(professional));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(account);
+        when(professionalRepository.save(any(Professional.class))).thenAnswer(i -> i.getArgument(0));
+
+        professionalService.patchProfessional(1L, professionalPatchDTO);
+
+        assertEquals(professionalPatchDTO.getPhone(), professional.getPhone());
+        assertEquals("John", professional.getFirstName());
+        assertEquals("Cena", professional.getLastName());
+        assertEquals("coffee man", professional.getSpecialty());
+
+    }
+
+    @Test
+    void patchProfessional_ThrowsResourceNotFoundException_WhenProfessionalNotFound() {
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> professionalService.patchProfessional(1L, new ProfessionalPatchDTO()));
+    }
+
+    @Test
+    void patchProfessional_ThrowsAccessDenied_WhenAccountsNotMatching() {
+        Account account = new Account();
+        account.setId(1L);
+        Account accountAuth = new Account();
+        accountAuth.setId(2L);
+        Professional professional = new Professional();
+        professional.setId(1L);
+        professional.setAccount(account);
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.of(professional));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(accountAuth);
+
+        assertThrows(AccessDeniedException.class,
+                () -> professionalService.patchProfessional(1L, new ProfessionalPatchDTO()));
+    }
+
+    @Test
+    void patchProfessional_ReturnsPatchedEmail_WhenSuccessfullyPatched() {
+
+        ProfessionalPatchDTO professionalPatchDTO = new ProfessionalPatchDTO();
+        professionalPatchDTO.setEmail("NeedACoffe@gmail.com");
+
+        Account account = new Account();
+        account.setId(1L);
+
+        Professional professional = new Professional();
+        professional.setId(1L);
+        professional.setAccount(account);
+
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.of(professional));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(account);
+        when(accountRepository.save(any(Account.class))).thenAnswer(i -> i.getArgument(0));
+
+        professionalService.patchProfessional(1L, professionalPatchDTO);
+
+        verify(accountRepository).save(account);
+        assertEquals("NeedACoffe@gmail.com", account.getEmail());
+
+    }
 }
