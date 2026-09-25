@@ -112,7 +112,7 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (64 tests)
-- [ ] Unit testing — AuthService / JwtService
+- [x] Unit testing — AuthService / JwtService fully covered (6 tests)
 
 ## Known Issues
 
