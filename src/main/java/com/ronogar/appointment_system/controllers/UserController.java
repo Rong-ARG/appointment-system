@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,20 +17,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 @Tag(name = "Users", description = "User management endpoints")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @Operation(summary = "Get all users", description = "return a list of all registered users")
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+
+
     @Operation(summary = "Get user by last name", description = "Returns a list of users matching the given last name")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
@@ -39,6 +39,8 @@ public class UserController {
     public ResponseEntity<List<UserResponseDTO>> getUsersByLastName(@PathVariable String lastName) {
         return ResponseEntity.ok(userService.getUserByLastName(lastName));
     }
+
+
     @Operation(summary = "Get user by email", description = "Returns a single user matching the given email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
@@ -50,6 +52,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
+
     @Operation(summary = "Get user by ID",description = "Returns a single user matching the given ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
@@ -60,6 +63,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+
     @Operation(summary = "Create user", description = "Creates a new user and returns the created resource")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User created successfully"),
@@ -69,6 +73,7 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(userRequestDTO));
     }
+
 
     @Operation(summary = "Update user", description = "Fully update an existing user by ID")
     @ApiResponses(value = {
@@ -82,6 +87,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+
     @Operation(summary = "Delete user", description = "Deletes an existing user by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
@@ -92,6 +98,8 @@ public class UserController {
         userService.deleteUser(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+
+
     @Operation(summary = "Partially update user", description = "Updates one or more fields of an existing user by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "User partially updated successfully"),

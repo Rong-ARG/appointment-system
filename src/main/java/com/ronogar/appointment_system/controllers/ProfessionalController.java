@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,14 +20,11 @@ import java.util.List;
 
 @Tag(name = "Professionals", description = "Professional management endpoints")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/professionals")
 public class ProfessionalController {
 
     private final ProfessionalService professionalService;
-
-    public ProfessionalController(ProfessionalService professionalService) {
-        this.professionalService = professionalService;
-    }
 
     @Operation(summary = "Get all professionals", description = "Returns a list of all registered professionals")
     @GetMapping
