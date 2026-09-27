@@ -3,6 +3,7 @@ package com.ronogar.appointment_system.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ronogar.appointment_system.config.CustomUserDetailsService;
 import com.ronogar.appointment_system.config.SecurityConfig;
+import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.services.auth.JwtService;
@@ -14,15 +15,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -77,7 +76,6 @@ public class UserControllerTest {
     }
 
     @Test
-    @WithMockUser
     void getUserById_validId_returns200() throws Exception {
 
         Long userId = 1L;
@@ -116,7 +114,7 @@ public class UserControllerTest {
     void getUsersByEmail_validEmail_returns200() throws Exception {
 
         String email = "Coffeman@gmail.com";
-        UserResponseDTO userResponseDTO = new UserResponseDTO(1L,"Juan","Rodriguez", "Coffeman@gmail.com", "1212");
+        UserResponseDTO userResponseDTO = new UserResponseDTO(1L, "Juan", "Rodriguez", "Coffeman@gmail.com", "1212");
 
         when(userService.getUserByEmail(email)).thenReturn(userResponseDTO);
 
@@ -137,6 +135,44 @@ public class UserControllerTest {
         mockMvc.perform(get("/api/users/lastname/{lastName}", lastName).with(user("testUser").roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].lastName").value(lastName));
+    }
+
+    @Test
+    void deleteUser_validId_returns204() throws Exception {
+        Long userId = 1L;
+
+        mockMvc.perform(delete("/api/users/{id}", userId).with(user("testUser").roles("USER")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void updateUser_validId_returns204() throws Exception {
+        Long userId = 1L;
+        UserRequestDTO userRequestDTO = new UserRequestDTO(
+                "Juan", "Bartolini", "1234"
+                , "JuanBartolini@gmail.com", "123521");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(userRequestDTO);
+
+        mockMvc.perform(put("/api/users/{id}", userId).with(user("testUser").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void patchUser_validId_returns204() throws Exception {
+        Long userId = 1L;
+        UserPatchDTO userPatchDTO = new UserPatchDTO("Juan", "Bartolini", "123521", "JuanBartolini@gmail.com");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(userPatchDTO);
+
+        mockMvc.perform(patch("/api/users/{id}", userId).with(user("testUser").roles("USER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isNoContent());
     }
 
 }
