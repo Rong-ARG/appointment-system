@@ -19,8 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -51,7 +51,7 @@ public class ProfessionalControllerTest {
             "welder", 2, true, "password123");
 
     @Test
-    void getAllProfessionals_returns200() throws Exception {
+    void getAllProfessionals_authenticatedUser_returns200() throws Exception {
         List<ProfessionalResponseDTO> professionalsList = List.of(professionalResponseBuilder);
 
         when(professionalService.getAllProfessionals()).thenReturn(professionalsList);
@@ -62,7 +62,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalById_ValidId_returns200() throws Exception {
+    void getProfessionalById_validId_returns200() throws Exception {
         Long professionalId = 1L;
         ProfessionalResponseDTO professional = professionalResponseBuilder;
 
@@ -74,7 +74,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalById_InvalidId_returns404() throws Exception {
+    void getProfessionalById_invalidId_returns404() throws Exception {
 
         when(professionalService.getProfessionalById(1L))
                 .thenThrow(new ResourceNotFoundException("Professional not found"));
@@ -85,7 +85,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalByEmail_ValidEmail_returns200() throws Exception {
+    void getProfessionalByEmail_validEmail_returns200() throws Exception {
         String email = "CoffeMan@gmail.com";
 
         ProfessionalResponseDTO professional = professionalResponseBuilder;
@@ -99,7 +99,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalByEmail_InvalidEmail_returns404() throws Exception {
+    void getProfessionalByEmail_invalidEmail_returns404() throws Exception {
 
         String email = "Something@gmail.com";
         when(professionalService.getProfessionalByEmail(email))
@@ -111,7 +111,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalByLastName_ValidLastName_returns200() throws Exception {
+    void getProfessionalByLastName_validLastName_returns200() throws Exception {
         String lastName = "Rodriguez";
         List<ProfessionalResponseDTO> professional = List.of(professionalResponseBuilder);
 
@@ -124,7 +124,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalByLastName_InvalidLastName_returns404() throws Exception {
+    void getProfessionalByLastName_invalidLastName_returns404() throws Exception {
         String lastName = "Rodriguez";
 
         when(professionalService.getProfessionalByLastName(lastName))
@@ -136,7 +136,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalBySpecialty_ValidSpecialty_returns200() throws Exception {
+    void getProfessionalBySpecialty_validSpecialty_returns200() throws Exception {
         String specialty = "welder";
         List<ProfessionalResponseDTO> professional = List.of(professionalResponseBuilder);
 
@@ -162,7 +162,7 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void createProfessional_Valid_returns201() throws Exception {
+    void createProfessional_validRequest_returns201() throws Exception {
         ProfessionalRequestDTO professionalRequestDTO = professionalRequestBuilder;
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -175,6 +175,25 @@ public class ProfessionalControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.specialty").value("welder"));
+                .andExpect(jsonPath("$.specialty").value("welder"))
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.email").value("CoffeMan@gmail.com"));
+    }
+
+    @Test
+    void createProfessional_blankEmail_returns400() throws Exception {
+
+        ProfessionalRequestDTO professionalRequestDTO = professionalRequestBuilder;
+        professionalRequestDTO.setEmail("");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(professionalRequestDTO);
+
+        mockMvc.perform(post("/api/professionals").with(user("user").roles("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+
+        verify(professionalService, never()).createProfessional(any(ProfessionalRequestDTO.class));
     }
 }
