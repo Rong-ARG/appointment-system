@@ -3,6 +3,7 @@ package com.ronogar.appointment_system.testUtil;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentPatchDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
+import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
@@ -31,6 +32,12 @@ public class TestDataFactory {
                 "password123");
 
         return requestDTO;
+    }
+
+    public static ProfessionalPatchDTO professionalPatch() {
+        ProfessionalPatchDTO patchDTO = new ProfessionalPatchDTO("Juan", "Rodriguez", "CoffeMan@gmail.com"
+                , "123512", "welder", 2, true);
+        return patchDTO;
     }
 
     public static UserResponseDTO userResponse() {

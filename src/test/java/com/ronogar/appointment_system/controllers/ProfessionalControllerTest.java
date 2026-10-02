@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
+import static com.ronogar.appointment_system.testUtil.TestDataFactory.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -42,17 +42,11 @@ public class ProfessionalControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private final ProfessionalResponseDTO professionalResponseBuilder = new ProfessionalResponseDTO(
-            1L, "Juan", "Rodriguez", "CoffeMan@gmail.com",
-            "213512", "welder", 2, true);
-
-    private final ProfessionalRequestDTO professionalRequestBuilder = new ProfessionalRequestDTO(
-            "Juan", "Rodriguez", "CoffeMan@gmail.com", "1235",
-            "welder", 2, true, "password123");
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void getAllProfessionals_authenticatedUser_returns200() throws Exception {
-        List<ProfessionalResponseDTO> professionalsList = List.of(professionalResponseBuilder);
+        List<ProfessionalResponseDTO> professionalsList = List.of(professionalResponse());
 
         when(professionalService.getAllProfessionals()).thenReturn(professionalsList);
 
@@ -64,9 +58,8 @@ public class ProfessionalControllerTest {
     @Test
     void getProfessionalById_validId_returns200() throws Exception {
         Long professionalId = 1L;
-        ProfessionalResponseDTO professionalB = professionalResponseBuilder;
 
-        when(professionalService.getProfessionalById(professionalId)).thenReturn(professionalB);
+        when(professionalService.getProfessionalById(professionalId)).thenReturn(professionalResponse());
 
         mockMvc.perform(get("/api/professionals/{id}", professionalId).with(user("user").roles("USER")))
                 .andExpect(status().isOk())
@@ -88,9 +81,7 @@ public class ProfessionalControllerTest {
     void getProfessionalByEmail_validEmail_returns200() throws Exception {
         String email = "CoffeMan@gmail.com";
 
-        ProfessionalResponseDTO professional = professionalResponseBuilder;
-
-        when(professionalService.getProfessionalByEmail(email)).thenReturn(professional);
+        when(professionalService.getProfessionalByEmail(email)).thenReturn(professionalResponse());
 
         mockMvc.perform(get("/api/professionals/email/{email}", email)
                         .with(user("user").roles("USER")))
@@ -113,7 +104,7 @@ public class ProfessionalControllerTest {
     @Test
     void getProfessionalByLastName_validLastName_returns200() throws Exception {
         String lastName = "Rodriguez";
-        List<ProfessionalResponseDTO> professional = List.of(professionalResponseBuilder);
+        List<ProfessionalResponseDTO> professional = List.of(professionalResponse());
 
         when(professionalService.getProfessionalByLastName(lastName)).thenReturn(professional);
 
@@ -138,7 +129,7 @@ public class ProfessionalControllerTest {
     @Test
     void getProfessionalBySpecialty_validSpecialty_returns200() throws Exception {
         String specialty = "welder";
-        List<ProfessionalResponseDTO> professional = List.of(professionalResponseBuilder);
+        List<ProfessionalResponseDTO> professional = List.of(professionalResponse());
 
         when(professionalService.getProfessionalsBySpecialty(specialty)).thenReturn(professional);
 
@@ -163,12 +154,10 @@ public class ProfessionalControllerTest {
 
     @Test
     void createProfessional_validRequest_returns201() throws Exception {
-        ProfessionalRequestDTO professionalRequestDTO = professionalRequestBuilder;
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(professionalRequestDTO);
+        String json = objectMapper.writeValueAsString(professionalRequest());
 
-        when(professionalService.createProfessional(any(ProfessionalRequestDTO.class))).thenReturn(professionalResponseBuilder);
+        when(professionalService.createProfessional(any(ProfessionalRequestDTO.class))).thenReturn(professionalResponse());
 
         mockMvc.perform(post("/api/professionals")
                         .with(user("user").roles("ADMIN"))
@@ -182,9 +171,8 @@ public class ProfessionalControllerTest {
 
     @Test
     void createProfessional_anonymous_returns401() throws Exception {
-        ProfessionalRequestDTO professionalRequestDTO = professionalRequestBuilder;
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(professionalRequestDTO);
+
+        String json = objectMapper.writeValueAsString(professionalRequest());
 
         mockMvc.perform(post("/api/professionals")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -196,10 +184,9 @@ public class ProfessionalControllerTest {
     @Test
     void createProfessional_blankEmail_returns400() throws Exception {
 
-        ProfessionalRequestDTO professionalRequestDTO = professionalRequestBuilder;
+        ProfessionalRequestDTO professionalRequestDTO = professionalRequest();
         professionalRequestDTO.setEmail("");
 
-        ObjectMapper objectMapper = new ObjectMapper();
         String json = objectMapper.writeValueAsString(professionalRequestDTO);
 
         mockMvc.perform(post("/api/professionals").with(user("user").roles("ADMIN"))
@@ -212,9 +199,8 @@ public class ProfessionalControllerTest {
 
     @Test
     void createProfessional_userRole_returns403() throws Exception {
-        ProfessionalRequestDTO professionalRequestDTO = professionalRequestBuilder;
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(professionalRequestDTO);
+
+        String json = objectMapper.writeValueAsString(professionalRequest());
 
         mockMvc.perform(post("/api/professionals")
                 .with(user("user").roles("USER"))
@@ -228,10 +214,7 @@ public class ProfessionalControllerTest {
     void updateProfessional_validRequest_returns204() throws Exception {
 
         Long id = 1L;
-        ProfessionalRequestDTO professional = professionalRequestBuilder;
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(professional);
+        String json = objectMapper.writeValueAsString(professionalRequest());
 
         mockMvc.perform(put("/api/professionals/{id}", id).with(user("user").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -243,9 +226,7 @@ public class ProfessionalControllerTest {
     @Test
     void updateProfessional_invalidId_returns404() throws Exception {
         Long id = 1L;
-        ProfessionalRequestDTO professionalRequestDTO = professionalRequestBuilder;
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(professionalRequestDTO);
+        String json = objectMapper.writeValueAsString(professionalRequest());
 
         doThrow(new ResourceNotFoundException("Professional not found"))
                 .when(professionalService).updateProfessional(eq(id), any(ProfessionalRequestDTO.class));
@@ -262,11 +243,8 @@ public class ProfessionalControllerTest {
     @Test
     void patchProfessional_validId_returns204() throws Exception {
         Long id = 1L;
-        ProfessionalPatchDTO professional = new ProfessionalPatchDTO("Juan", "Rodriguez", "CoffeMan@gmail.com"
-                , "123512", "welder", 2, true);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(professional);
+        String json = objectMapper.writeValueAsString(professionalPatch());
 
         mockMvc.perform(patch("/api/professionals/{id}", id)
                         .with(user("user").roles("USER"))
@@ -279,11 +257,7 @@ public class ProfessionalControllerTest {
     @Test
     void patchProfessional_invalidId_returns404() throws Exception {
         Long id = 1L;
-        ProfessionalPatchDTO professional = new ProfessionalPatchDTO("Juan", "Rodriguez", "CoffeMan@gmail.com"
-                , "123512", "welder", 2, true);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(professional);
+        String json = objectMapper.writeValueAsString(professionalPatch());
 
         doThrow(new ResourceNotFoundException("Professional not found"))
                 .when(professionalService).patchProfessional(eq(id), any(ProfessionalPatchDTO.class));
