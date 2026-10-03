@@ -6,6 +6,7 @@ import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
+import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
@@ -59,6 +60,13 @@ public class TestDataFactory {
                 "210512");
 
         return userRequestDTO;
+    }
+
+    public static UserPatchDTO userPatch(){
+        UserPatchDTO userPatchDTO = new UserPatchDTO(
+                "Martin", "Fernandez"
+                , "12345", "Martin@gmail.com");
+        return userPatchDTO;
     }
 
     public static AppointmentResponseDTO appointmentResponse() {

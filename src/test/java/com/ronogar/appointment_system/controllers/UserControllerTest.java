@@ -3,7 +3,6 @@ package com.ronogar.appointment_system.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ronogar.appointment_system.config.CustomUserDetailsService;
 import com.ronogar.appointment_system.config.SecurityConfig;
-import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.services.auth.JwtService;
@@ -17,6 +16,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+
+import static com.ronogar.appointment_system.testUtil.TestDataFactory.*;
+
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -41,32 +43,31 @@ public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Test
     void createUser_validRequest_returns201() throws Exception {
-        UserRequestDTO userRequestDTO = new UserRequestDTO(
-                "Juan", "Bartolini", "1234"
-                , "JuanBartolini@gmail.com", "123521");
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(userRequestDTO);
+        UserResponseDTO responseDTO = userResponse();
+        String email= responseDTO.getEmail();
 
-        when(userService.createUser(any(UserRequestDTO.class))).thenReturn(new UserResponseDTO(
-                1L, "Juan", "Bartolini", "JuanBartolini@gmail.com", "123521"));
+        String json = objectMapper.writeValueAsString(userRequest());
+
+        when(userService.createUser(any(UserRequestDTO.class))).thenReturn(responseDTO);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("JuanBartolini@gmail.com"));
+                .andExpect(jsonPath("$.email").value(email));
     }
 
     @Test
     void createUser_invalidRequest_returns400() throws Exception {
-        UserRequestDTO userRequestDTO = new UserRequestDTO(
-                "Juan", "Bartolini", "1234"
-                , "JuanBartolini", "123521");
 
-        ObjectMapper objectMapper = new ObjectMapper();
+        UserRequestDTO userRequestDTO = userRequest();
+        userRequestDTO.setEmail("");
+
         String json = objectMapper.writeValueAsString(userRequestDTO);
 
         mockMvc.perform(post("/api/users")
@@ -78,11 +79,10 @@ public class UserControllerTest {
     @Test
     void getUserById_validId_returns200() throws Exception {
 
-        Long userId = 1L;
+        UserResponseDTO responseDTO = userResponse();
+        Long userId = responseDTO.getId();
 
-        UserResponseDTO userResponseDTO = new UserResponseDTO(1L, "Juan", "Bartolini", "juan@gmail.com", "123521");
-
-        when(userService.getUserById(userId)).thenReturn(userResponseDTO);
+        when(userService.getUserById(userId)).thenReturn(responseDTO);
 
         mockMvc.perform(get("/api/users/{id}", userId).with(user("testUser")))
                 .andExpect(status().isOk())
@@ -92,15 +92,14 @@ public class UserControllerTest {
 
     @Test
     void getAllUsers_asAdmin_returns200() throws Exception {
-        List<UserResponseDTO> userResponseDTOList = List.of(
-                new UserResponseDTO(1L, "Juan", "Bartolini", "juan@gmail.com", "123521")
-        );
+
+        List<UserResponseDTO> userResponseDTOList = List.of(userResponse());
 
         when(userService.getAllUsers()).thenReturn(userResponseDTOList);
 
         mockMvc.perform(get("/api/users").with(user("adminUser").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].email").value("juan@gmail.com"));
+                .andExpect(jsonPath("$[0].email").value(userResponseDTOList.getFirst().getEmail()));
     }
 
     @Test
@@ -113,10 +112,10 @@ public class UserControllerTest {
     @Test
     void getUsersByEmail_validEmail_returns200() throws Exception {
 
-        String email = "Coffeman@gmail.com";
-        UserResponseDTO userResponseDTO = new UserResponseDTO(1L, "Juan", "Rodriguez", "Coffeman@gmail.com", "1212");
+        UserResponseDTO responseDTO = userResponse();
+        String email = responseDTO.getEmail();
 
-        when(userService.getUserByEmail(email)).thenReturn(userResponseDTO);
+        when(userService.getUserByEmail(email)).thenReturn(responseDTO);
 
         mockMvc.perform(get("/api/users/email/{email}", email).with(user("testUser").roles("USER")))
                 .andExpect(status().isOk())
@@ -125,10 +124,10 @@ public class UserControllerTest {
 
     @Test
     void getUsersByLastName_validLastName_returns200() throws Exception {
-        String lastName = "Rodriguez";
-        List<UserResponseDTO> userResponseDTOList = List.of(
-                new UserResponseDTO(1L, "Juan", "Rodriguez", "juan@gmail.com", "1212")
-        );
+        UserResponseDTO responseDTO = userResponse();
+        String lastName = responseDTO.getLastName();
+
+        List<UserResponseDTO> userResponseDTOList = List.of(responseDTO);
 
         when(userService.getUserByLastName(lastName)).thenReturn(userResponseDTOList);
 
@@ -148,12 +147,8 @@ public class UserControllerTest {
     @Test
     void updateUser_validId_returns204() throws Exception {
         Long userId = 1L;
-        UserRequestDTO userRequestDTO = new UserRequestDTO(
-                "Juan", "Bartolini", "1234"
-                , "JuanBartolini@gmail.com", "123521");
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(userRequestDTO);
+        String json = objectMapper.writeValueAsString(userRequest());
 
         mockMvc.perform(put("/api/users/{id}", userId).with(user("testUser").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -163,11 +158,10 @@ public class UserControllerTest {
 
     @Test
     void patchUser_validId_returns204() throws Exception {
-        Long userId = 1L;
-        UserPatchDTO userPatchDTO = new UserPatchDTO("Juan", "Bartolini", "123521", "JuanBartolini@gmail.com");
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = objectMapper.writeValueAsString(userPatchDTO);
+        Long userId = 1L;
+
+        String json = objectMapper.writeValueAsString(userPatch());
 
         mockMvc.perform(patch("/api/users/{id}", userId).with(user("testUser").roles("USER"))
                 .contentType(MediaType.APPLICATION_JSON)
