@@ -6,6 +6,7 @@ import com.ronogar.appointment_system.config.SecurityConfig;
 import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
+import com.ronogar.appointment_system.exceptions.DuplicateResourceException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.services.auth.JwtService;
 import com.ronogar.appointment_system.services.user.UserService;
@@ -24,8 +25,7 @@ import static com.ronogar.appointment_system.testUtil.TestDataFactory.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -81,6 +81,20 @@ public class UserControllerTest {
     }
 
     @Test
+    void createUser_duplicateEmail_returns409() throws Exception {
+        String json = objectMapper.writeValueAsString(userRequest());
+
+        when(userService.createUser(any(UserRequestDTO.class)))
+                .thenThrow(new DuplicateResourceException("email already in use"));
+
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json))
+                .andExpect(status().isConflict());
+
+    }
+
+    @Test
     void getUserById_validId_returns200() throws Exception {
 
         UserResponseDTO responseDTO = userResponse();
@@ -102,6 +116,14 @@ public class UserControllerTest {
         mockMvc.perform(get("/api/users/{id}", userId)
                 .with(user("testUser").roles("USER")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getUserById_anonymous_returns401() throws Exception {
+        mockMvc.perform(get("/api/users/{id}", 100L))
+                .andExpect(status().isUnauthorized());
+
+        verify(userService, never()).getUserById(anyLong());
     }
 
     @Test
