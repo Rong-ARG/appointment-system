@@ -6,6 +6,7 @@ import com.ronogar.appointment_system.config.SecurityConfig;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
+import com.ronogar.appointment_system.dtos.professional.ProfessionalSelfRequestDTO;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.services.auth.JwtService;
 import com.ronogar.appointment_system.services.professional.ProfessionalService;
@@ -208,6 +209,61 @@ public class ProfessionalControllerTest {
                 .content(json))
                 .andExpect(status().isForbidden());
         verify(professionalService, never()).createProfessional(any(ProfessionalRequestDTO.class));
+    }
+
+    @Test
+    void createOwnProfessionalProfile_authenticatedUser_returns201() throws Exception {
+        String email = "Martin@gmail.com";
+        ProfessionalResponseDTO response = professionalResponse();
+        String json = objectMapper.writeValueAsString(professionalSelfRequest());
+
+        when(professionalService.createOwnProfessionalProfile(eq(email), any(ProfessionalSelfRequestDTO.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(post("/api/professionals/me")
+                        .with(user(email).roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(response.getId()));
+    }
+
+    @Test
+    void createOwnProfessionalProfile_blankSpecialty_returns400() throws Exception {
+        ProfessionalSelfRequestDTO request = professionalSelfRequest();
+        request.setSpecialty("");
+
+        mockMvc.perform(post("/api/professionals/me")
+                        .with(user("Martin@gmail.com").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(professionalService, never())
+                .createOwnProfessionalProfile(anyString(), any(ProfessionalSelfRequestDTO.class));
+    }
+
+    @Test
+    void deleteProfessional_validId_returns204() throws Exception {
+        Long id = 1L;
+
+        mockMvc.perform(delete("/api/professionals/{id}", id)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isNoContent());
+
+        verify(professionalService).deleteProfessional(id);
+    }
+
+    @Test
+    void deleteProfessional_invalidId_returns404() throws Exception {
+        Long id = 100L;
+
+        doThrow(new ResourceNotFoundException("Professional not found"))
+                .when(professionalService).deleteProfessional(id);
+
+        mockMvc.perform(delete("/api/professionals/{id}", id)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isNotFound());
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.ronogar.appointment_system.dtos.auth.AuthResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
+import com.ronogar.appointment_system.dtos.professional.ProfessionalSelfRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserPatchDTO;
 import com.ronogar.appointment_system.dtos.user.UserRequestDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
@@ -41,6 +42,11 @@ public class TestDataFactory {
         ProfessionalPatchDTO patchDTO = new ProfessionalPatchDTO("Juan", "Rodriguez", "CoffeMan@gmail.com"
                 , "123512", "welder", 2, true);
         return patchDTO;
+    }
+
+    public static ProfessionalSelfRequestDTO professionalSelfRequest() {
+        return new ProfessionalSelfRequestDTO(
+                "Juan", "Rodriguez", "1235", "welder", 2, true);
     }
 
     public static UserResponseDTO userResponse() {
