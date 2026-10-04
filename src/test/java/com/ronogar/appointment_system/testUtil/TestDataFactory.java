@@ -3,6 +3,8 @@ package com.ronogar.appointment_system.testUtil;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentPatchDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
+import com.ronogar.appointment_system.dtos.auth.AuthRequestDTO;
+import com.ronogar.appointment_system.dtos.auth.AuthResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalPatchDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalRequestDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
@@ -29,7 +31,7 @@ public class TestDataFactory {
 
         ProfessionalRequestDTO requestDTO = new ProfessionalRequestDTO(
                 "Juan", "Rodriguez", "CoffeMan@gmail.com",
-                "1235","welder", 2, true,
+                "1235", "welder", 2, true,
                 "password123");
 
         return requestDTO;
@@ -44,7 +46,7 @@ public class TestDataFactory {
     public static UserResponseDTO userResponse() {
 
         UserResponseDTO userResponseDTO = new UserResponseDTO(
-                1L,"Diego", "Maradona"
+                1L, "Diego", "Maradona"
                 , "Marado@gmail.com", "11111"
         );
 
@@ -62,7 +64,7 @@ public class TestDataFactory {
         return userRequestDTO;
     }
 
-    public static UserPatchDTO userPatch(){
+    public static UserPatchDTO userPatch() {
         UserPatchDTO userPatchDTO = new UserPatchDTO(
                 "Martin", "Fernandez"
                 , "12345", "Martin@gmail.com");
@@ -72,7 +74,7 @@ public class TestDataFactory {
     public static AppointmentResponseDTO appointmentResponse() {
 
         AppointmentResponseDTO responseDTO = new AppointmentResponseDTO(
-                2L, LocalDateTime.of(2025, 6, 15 , 10 , 30)
+                2L, LocalDateTime.of(2025, 6, 15, 10, 30)
                 , AppointmentStatus.PENDING, professionalResponse(), userResponse());
 
         return responseDTO;
@@ -80,9 +82,9 @@ public class TestDataFactory {
 
     public static AppointmentRequestDTO appointmentRequest() {
 
-        AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO(1L,1L
-                ,LocalDateTime.of(2025, 10, 15 , 21, 30, 30)
-                ,AppointmentStatus.PENDING);
+        AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO(1L, 1L
+                , LocalDateTime.of(2025, 10, 15, 21, 30, 30)
+                , AppointmentStatus.PENDING);
 
         return appointmentRequestDTO;
     }
@@ -91,6 +93,18 @@ public class TestDataFactory {
         AppointmentPatchDTO appointmentPatchDTO = new AppointmentPatchDTO(AppointmentStatus.CONFIRMED);
 
         return appointmentPatchDTO;
+    }
+
+    public static AuthRequestDTO authRequest() {
+        AuthRequestDTO authRequestDTO = new AuthRequestDTO();
+        authRequestDTO.setEmail("Something@gmail.com");
+        authRequestDTO.setPassword("1234");
+        return authRequestDTO;
+    }
+
+    public static AuthResponseDTO authResponse() {
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO("coffe-jwt-key");
+        return authResponseDTO;
     }
 
 }
