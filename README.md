@@ -58,6 +58,10 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 5. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
 6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow. There's also a `profile.html` page to edit your info or delete your account, and a `professional-appointments.html` page for professionals to confirm/cancel appointments booked with them.
 
+This is what the test frontend looks like once you log in:
+
+![Test frontend dashboard](docs/dashboard.png)
+
 ### Running the tests
 
 ```
