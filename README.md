@@ -20,12 +20,14 @@ for my first job as a backend developer :)
 ## Notes
 
 - Spring Boot version was set to 4.1.0 to ensure compatibility with springdoc-openapi 2.8.9
-- Database credentials are not included in the repository for security reasons — use the example properties file
-- The JWT key here is just a demo key, committed on purpose so the project runs out of the box. In a real app this should never be hardcoded, it would come from an environment variable instead.
+- `application.properties` is not committed (it's in `.gitignore`), use `application.properties.example` as a starting point
+- The JWT key in the example file is just a demo value so the project runs out of the box. In a real app it should never be hardcoded, it would come from an environment variable instead.
 
 ## API Documentation
 
 Swagger UI available at: http://localhost:8080/swagger-ui/index.html
+
+![Swagger UI](docs/swagger.png)
 
 ## Getting Started
 
@@ -55,6 +57,14 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
    ```
 5. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
 6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow. There's also a `profile.html` page to edit your info or delete your account, and a `professional-appointments.html` page for professionals to confirm/cancel appointments booked with them.
+
+### Running the tests
+
+```
+./mvnw test
+```
+
+Do the setup steps above first (properties file + database running), because `AppointmentSystemApplicationTests` loads the full Spring context. The rest of the tests use mocks and don't need the database.
 
 ## API Endpoints
 
@@ -111,20 +121,29 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
-- [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (64 tests)
+- [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (66 tests)
 - [x] Unit testing — AuthService / JwtService fully covered (6 tests)
+- [x] Unit testing — CurrentUserService
+- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (142 tests in total across the project)
 
-## Known Issues
+## Bugs and security fixes
 
-- ~~Users could create appointments on behalf of other users~~ — `userId` in the request body wasn't checked against the logged-in user.
-- ~~A `Professional` could be created without an existing `User` account~~ — broke the "user first, professional later" model.
-- ~~Anyone could turn someone else's account into a professional~~ — `POST /api/professionals` is now ADMIN-only, self-service is done through `/me`.
-- ~~`GET /api/appointments/{id}` (and delete/patch) didn't check if the logged-in user was actually involved in the appointment~~ — added an ownership check (`verifyOwner`) shared across those methods.
-- ~~Confusing error message when a professional-only account hits an endpoint that expects a user profile~~ — now says clearly that the account has no user profile.
-- ~~A professional could delete their account while still having pending appointments, leaving them orphaned~~ — `deleteProfessional` now blocks the deletion if the professional still has appointments.
-- ~~`deleteUser` still leaves a `Professional` profile orphaned (no `User`) if that account also has a professional profile~~ — `deleteUser` now blocks the deletion if the account still has a professional profile (must delete that first) or if the user has pending appointments as a client.
-- ~~Backend error messages weren't showing up on the frontend (always showed a generic "Error 409" instead of the real message)~~ — exception handlers in `GlobalExceptionHandler` were returning plain text instead of JSON, but the frontend's `apiFetch` only parses the response body when the `Content-Type` is `application/json`. Now every handler returns `{ "message": "..." }`.
-- ~~Removing a professional profile could throw a raw Hibernate error (`ObjectDeletedException`) straight to the user~~ — `Account` still held an in-memory reference to the already-deleted `Professional` (cascade tried to re-save it). Fixed by clearing the reference (`account.setProfessional(null)`) before saving. Also added a catch-all exception handler so any future unexpected error returns a safe generic message instead of leaking internal details.
-- ~~Any authenticated user could look up another user's full profile by id (`GET /api/users/{id}`)~~ — added an ownership check so only the user themself or an ADMIN can access it.
-- ~~JWT expiration time was hardcoded in `JwtService`~~ — moved to `application.properties`.
-- ~~`JwtAuthFilter` silently swallowed all token validation errors with no logging~~ — added a debug log so failures are traceable without exposing details to the client.
+Things I found and fixed while building the project:
+
+<details>
+<summary>Show the 12 fixes</summary>
+
+- Users could create appointments on behalf of other users — `userId` in the request body wasn't checked against the logged-in user.
+- A `Professional` could be created without an existing `User` account — broke the "user first, professional later" model.
+- Anyone could turn someone else's account into a professional — `POST /api/professionals` is now ADMIN-only, self-service is done through `/me`.
+- `GET /api/appointments/{id}` (and delete/patch) didn't check if the logged-in user was actually involved in the appointment — added an ownership check (`verifyOwner`) shared across those methods.
+- Confusing error message when a professional-only account hits an endpoint that expects a user profile — now says clearly that the account has no user profile.
+- A professional could delete their account while still having pending appointments, leaving them orphaned — `deleteProfessional` now blocks the deletion if the professional still has appointments.
+- `deleteUser` still left a `Professional` profile orphaned (no `User`) if that account also had a professional profile — `deleteUser` now blocks the deletion if the account still has a professional profile (must delete that first) or if the user has pending appointments as a client.
+- Backend error messages weren't showing up on the frontend (always showed a generic "Error 409" instead of the real message) — exception handlers in `GlobalExceptionHandler` were returning plain text instead of JSON, but the frontend's `apiFetch` only parses the response body when the `Content-Type` is `application/json`. Now every handler returns `{ "message": "..." }`.
+- Removing a professional profile could throw a raw Hibernate error (`ObjectDeletedException`) straight to the user — `Account` still held an in-memory reference to the already-deleted `Professional` (cascade tried to re-save it). Fixed by clearing the reference (`account.setProfessional(null)`) before saving. Also added a catch-all exception handler so any future unexpected error returns a safe generic message instead of leaking internal details.
+- Any authenticated user could look up another user's full profile by id (`GET /api/users/{id}`) — added an ownership check so only the user themself or an ADMIN can access it.
+- JWT expiration time was hardcoded in `JwtService` — moved to `application.properties`.
+- `JwtAuthFilter` silently swallowed all token validation errors with no logging — added a debug log so failures are traceable without exposing details to the client.
+
+</details>
