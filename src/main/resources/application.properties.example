@@ -1,0 +1,18 @@
+spring.application.name=appointment-system
+
+# same user/password as the MySQL container in docker-compose.yml
+spring.datasource.url=jdbc:mysql://localhost:3306/appointment_system
+spring.datasource.username=admin
+spring.datasource.password=admin
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+# demo key just so the project runs out of the box
+# (in a real app this would come from an env variable, not from this file)
+security.jwt.key.private=change-me-demo-key
+security.jwt.user.generator=AUTH0JWT-BACKEND
+security.jwt.expiration.time=1800000
+
+logging.level.org.springframework.security=DEBUG
