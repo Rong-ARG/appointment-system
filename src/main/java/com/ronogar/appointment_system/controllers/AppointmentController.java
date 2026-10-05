@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Appointment", description = "Appointment management endpoints")
+@Tag(name = "Appointments", description = "Appointment management endpoints")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/appointments")
