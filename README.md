@@ -4,6 +4,17 @@ A REST API for scheduling appointments between clients and professionals.
 Built as a personal project to practice Java and Spring Boot while preparing
 for my first job as a backend developer :)
 
+## Features
+
+- JWT authentication with Spring Security and two roles (USER and ADMIN)
+- One account can be both a client and a professional
+- Clients can search professionals by specialty or last name and book appointments
+- Professionals can confirm or cancel the appointments booked with them
+- Ownership checks: you can only see or modify appointments you're involved in
+- Business rules: a user or professional can't be deleted while they still have appointments
+- Validation and error handling that return clear JSON messages
+- Swagger documentation and a test suite with JUnit 5 and Mockito
+
 ## Technologies
 
 - Java 21
