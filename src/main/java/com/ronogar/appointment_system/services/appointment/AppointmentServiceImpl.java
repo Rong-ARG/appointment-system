@@ -31,7 +31,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
 
-    public final Appointment toEntity(AppointmentRequestDTO appointmentRequestDTO) {
+    private Appointment toEntity(AppointmentRequestDTO appointmentRequestDTO) {
         Appointment appointment = new Appointment();
         appointment.setDateTime(appointmentRequestDTO.getDateTime());
         appointment.setStatus(AppointmentStatus.PENDING);
@@ -52,7 +52,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         return appointment;
     }
 
-    public final AppointmentResponseDTO toDto(Appointment appointment) {
+    private AppointmentResponseDTO toDto(Appointment appointment) {
         AppointmentResponseDTO dto = new AppointmentResponseDTO();
         dto.setId(appointment.getId());
         dto.setDateTime(appointment.getDateTime());
