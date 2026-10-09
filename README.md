@@ -1,5 +1,15 @@
 # Appointment System API
 
+[![CI](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/Tests-149%20passing-success)
+![Last commit](https://img.shields.io/github/last-commit/Rong-ARG/appointment-system)
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)
+![Spring Security](https://img.shields.io/badge/Spring%20Security-JWT-6DB33F?logo=springsecurity&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-Swagger-85EA2D?logo=swagger&logoColor=black)c
+
 A REST API for scheduling appointments between clients and professionals.
 Built as a personal project to practice Java and Spring Boot while preparing
 for my first job as a backend developer :)
