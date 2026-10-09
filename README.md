@@ -136,17 +136,17 @@ Do the setup steps above first (properties file + database running), because `Ap
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
-- [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (66 tests)
+- [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
 - [x] Unit testing — AuthService / JwtService fully covered (6 tests)
 - [x] Unit testing — CurrentUserService
-- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (142 tests in total across the project)
+- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (149 tests in total across the project)
 
 ## Bugs and security fixes
 
 Things I found and fixed while building the project:
 
 <details>
-<summary>Show the 12 fixes</summary>
+<summary>Show the 13 fixes</summary>
 
 - Users could create appointments on behalf of other users — `userId` in the request body wasn't checked against the logged-in user.
 - A `Professional` could be created without an existing `User` account — broke the "user first, professional later" model.
@@ -160,5 +160,6 @@ Things I found and fixed while building the project:
 - Any authenticated user could look up another user's full profile by id (`GET /api/users/{id}`) — added an ownership check so only the user themself or an ADMIN can access it.
 - JWT expiration time was hardcoded in `JwtService` — moved to `application.properties`.
 - `JwtAuthFilter` silently swallowed all token validation errors with no logging — added a debug log so failures are traceable without exposing details to the client.
+- Any participant of an appointment could set any status on it (a client could confirm their own appointment, or reopen a cancelled one) — `AppointmentStatus` now defines the allowed transitions, only the professional can confirm, and invalid changes return 409.
 
 </details>
