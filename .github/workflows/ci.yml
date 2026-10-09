@@ -11,7 +11,7 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8
+        image: public.ecr.aws/docker/library/mysql:8
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: appointment_system
