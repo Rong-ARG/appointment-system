@@ -4,6 +4,7 @@ import com.ronogar.appointment_system.dtos.appointment.AppointmentPatchDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
+import com.ronogar.appointment_system.exceptions.InvalidAppointmentStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
 import com.ronogar.appointment_system.models.Appointment;
@@ -381,32 +382,83 @@ public class AppointmentServiceImplTest {
     }
 
     @Test
-    void patchAppointment_ReturnsPatchedAppointment_WhenPatched() {
-        Account authAccount = new Account();
-        authAccount.setId(1L);
+    void patchAppointment_ConfirmsAppointment_WhenProfessionalConfirmsPending() {
+        Account clientAccount = new Account();
+        clientAccount.setId(1L);
+        Account professionalAccount = new Account();
+        professionalAccount.setId(2L);
 
         User user = new User();
-        user.setId(1L);
-        user.setAccount(authAccount);
-
+        user.setAccount(clientAccount);
         Professional professional = new Professional();
-        professional.setId(1L);
-        professional.setAccount(authAccount);
+        professional.setAccount(professionalAccount);
 
         Appointment appointment = new Appointment();
         appointment.setUser(user);
         appointment.setProfessional(professional);
+        appointment.setStatus(AppointmentStatus.PENDING);
 
-        AppointmentPatchDTO appointmentPatchDTO = new AppointmentPatchDTO();
-        appointmentPatchDTO.setStatus(AppointmentStatus.PENDING);
+        AppointmentPatchDTO dto = new AppointmentPatchDTO();
+        dto.setStatus(AppointmentStatus.CONFIRMED);
 
         when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
-        when(currentUserService.getAuthenticatedAccount()).thenReturn(authAccount);
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(professionalAccount);
 
-        appointmentService.patchAppointment(1L, appointmentPatchDTO);
+        appointmentService.patchAppointment(1L, dto);
 
-        assertEquals(AppointmentStatus.PENDING, appointment.getStatus());
-        verify(appointmentRepository).save(any(Appointment.class));
+        assertEquals(AppointmentStatus.CONFIRMED, appointment.getStatus());
+    }
+
+    @Test
+    void patchAppointment_ThrowsAccessDenied_WhenClientTriesToConfirm() {
+        Account clientAccount = new Account();
+        clientAccount.setId(1L);
+        Account professionalAccount = new Account();
+        professionalAccount.setId(2L);
+
+        User user = new User();
+        user.setAccount(clientAccount);
+        Professional professional = new Professional();
+        professional.setAccount(professionalAccount);
+
+        Appointment appointment = new Appointment();
+        appointment.setUser(user);
+        appointment.setProfessional(professional);
+        appointment.setStatus(AppointmentStatus.PENDING);
+
+        AppointmentPatchDTO dto = new AppointmentPatchDTO();
+        dto.setStatus(AppointmentStatus.CONFIRMED);
+
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(clientAccount);
+
+        assertThrows(AccessDeniedException.class, () -> appointmentService.patchAppointment(1L, dto));
+    }
+
+    @Test
+    void patchAppointment_ThrowsInvalidState_WhenAppointmentIsCancelled() {
+        Account professionalAccount = new Account();
+        professionalAccount.setId(2L);
+        Account clientAccount = new Account();
+        clientAccount.setId(1L);
+
+        User user = new User();
+        user.setAccount(clientAccount);
+        Professional professional = new Professional();
+        professional.setAccount(professionalAccount);
+
+        Appointment appointment = new Appointment();
+        appointment.setUser(user);
+        appointment.setProfessional(professional);
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+
+        AppointmentPatchDTO dto = new AppointmentPatchDTO();
+        dto.setStatus(AppointmentStatus.CONFIRMED);
+
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(professionalAccount);
+
+        assertThrows(InvalidAppointmentStateException.class, () -> appointmentService.patchAppointment(1L, dto));
     }
 
     @Test

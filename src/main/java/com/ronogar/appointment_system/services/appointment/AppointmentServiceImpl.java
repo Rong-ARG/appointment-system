@@ -6,6 +6,7 @@ import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
+import com.ronogar.appointment_system.exceptions.InvalidAppointmentStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
 import com.ronogar.appointment_system.models.Appointment;
@@ -134,29 +135,46 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public void patchAppointment(Long id, AppointmentPatchDTO appointmentPatchDTO) {
-
+    public void patchAppointment(Long id, AppointmentPatchDTO dto) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
-        verifyOwner(appointment);
+        Account account = currentUserService.getAuthenticatedAccount();
+        boolean isProfessional = isProfessionalOf(appointment, account);
+        boolean isClient = isClientOf(appointment, account);
 
-
-        if (appointmentPatchDTO.getStatus() != null) {
-            appointment.setStatus(appointmentPatchDTO.getStatus());
+        if (!isProfessional && !isClient) {
+            throw new AccessDeniedException("Access denied");
         }
 
-        appointmentRepository.save(appointment);
+        AppointmentStatus current = appointment.getStatus();
+        AppointmentStatus target = dto.getStatus();
+
+        if (target == AppointmentStatus.CONFIRMED && !isProfessional) {
+            throw new AccessDeniedException("Only the professional can confirm an appointment");
+        }
+
+        if (!current.canTransitionTo(target)) {
+            throw new InvalidAppointmentStateException(
+                    "Cannot change appointment status from " + current + " to " + target);
+        }
+
+        appointment.setStatus(target);
+    }
+
+    private boolean isClientOf(Appointment a, Account account) {
+        return a.getUser().getAccount().getId().equals(account.getId());
+    }
+
+    private boolean isProfessionalOf(Appointment a, Account account) {
+        return a.getProfessional().getAccount().getId().equals(account.getId());
     }
 
     private void verifyOwner(Appointment appointment) {
         Account account = currentUserService.getAuthenticatedAccount();
-
-        boolean isUser = account.getId().equals(appointment.getUser().getAccount().getId());
-        boolean isProfessional = appointment.getProfessional().getAccount().getId().equals(account.getId());
-
-        if (!isUser && !isProfessional) {
+        if (!isClientOf(appointment, account) && !isProfessionalOf(appointment, account)) {
             throw new AccessDeniedException("Access denied");
         }
+
     }
 }

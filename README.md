@@ -138,8 +138,8 @@ Do the setup steps above first (properties file + database running), because `Ap
 - [ ] Flyway migrations
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (66 tests)
 - [x] Unit testing — AuthService / JwtService fully covered (6 tests)
-- [x] Unit testing — CurrentUserService and JwtAuthFilter
-- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (147 tests in total across the project)
+- [x] Unit testing — CurrentUserService
+- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (142 tests in total across the project)
 
 ## Bugs and security fixes
 
