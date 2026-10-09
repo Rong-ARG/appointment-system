@@ -14,6 +14,13 @@ A REST API for scheduling appointments between clients and professionals.
 Built as a personal project to practice Java and Spring Boot while preparing
 for my first job as a backend developer :)
 
+## Key results
+
+- **149 automated tests** (JUnit 5, Mockito and MockMvc), with CI on GitHub Actions
+- **13 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
+- **26 REST endpoints** across auth, users, professionals and appointments
+- **JWT authentication** with ownership checks, so users can only access their own data
+
 ## Features
 
 - JWT authentication with Spring Security and two roles (USER and ADMIN)
@@ -24,6 +31,13 @@ for my first job as a backend developer :)
 - Business rules: a user or professional can't be deleted while they still have appointments
 - Validation and error handling that return clear JSON messages
 - Swagger documentation and a test suite with JUnit 5 and Mockito
+
+## Design decisions
+
+- **One DTO per operation** (Request, Response, Patch), so the API contract doesn't expose entity internals
+- **Shared `Account` model:** a person can be both a client and a professional without duplicating credentials
+- **Ownership checks in the service layer**, not only in the controllers
+- **Status transitions defined in the `AppointmentStatus` enum**, so the rules live next to the states
 
 ## Technologies
 
@@ -173,3 +187,8 @@ Things I found and fixed while building the project:
 - Any participant of an appointment could set any status on it (a client could confirm their own appointment, or reopen a cancelled one) — `AppointmentStatus` now defines the allowed transitions, only the professional can confirm, and invalid changes return 409.
 
 </details>
+
+## Contact
+
+- GitHub: [Rong-ARG](https://github.com/Rong-ARG)
+- Email: abucewiczpablo@gmail.com
