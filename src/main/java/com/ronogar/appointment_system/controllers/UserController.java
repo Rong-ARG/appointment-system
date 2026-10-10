@@ -30,9 +30,22 @@ public class UserController {
     }
 
 
-    @Operation(summary = "Get user by last name", description = "Returns a list of users matching the given last name")
+    @Operation(summary = "Get current user", description = "Returns the profile of the logged-in user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profile retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Not authenticated"),
+            @ApiResponse(responseCode = "403", description = "The account has no user profile")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getCurrentUser() {
+        return ResponseEntity.ok(userService.getCurrentUser());
+    }
+
+
+    @Operation(summary = "Get user by last name", description = "Returns a list of users matching the given last name (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
+            @ApiResponse(responseCode = "403", description = "Only ADMIN can search users by last name"),
             @ApiResponse(responseCode = "404", description = "No users found with the provided last name")
     })
     @GetMapping("/lastname/{lastName}")
@@ -41,9 +54,10 @@ public class UserController {
     }
 
 
-    @Operation(summary = "Get user by email", description = "Returns a single user matching the given email")
+    @Operation(summary = "Get user by email", description = "Returns a single user matching the given email (ADMIN only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+            @ApiResponse(responseCode = "403", description = "Only ADMIN can search users by email"),
             @ApiResponse(responseCode = "404",description = "No user found with the provided email"),
             @ApiResponse(responseCode = "400", description = "email not valid")
     })
@@ -113,4 +127,3 @@ public class UserController {
     }
 
 }
-

@@ -284,8 +284,8 @@ public class UserServiceImplTest {
     @Test
     public void updateUser_throwsAccessDeniedException_WhenNotIsUser() {
 
-       User authUser = new User();
-       authUser.setId(1L);
+        User authUser = new User();
+        authUser.setId(1L);
 
         Account account = new Account();
         User user = new User();
@@ -454,5 +454,35 @@ public class UserServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> userService.patchUser(1L, new UserPatchDTO()));
+    }
+
+
+    @Test
+    void getCurrentUser_returnsAuthenticatedUser() {
+
+        Account account = new Account();
+        account.setEmail("iwannajob@gmail.com");
+
+        User user = new User();
+        user.setId(1L);
+        user.setFirstName("Ariel");
+        user.setAccount(account);
+
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+
+        UserResponseDTO result = userService.getCurrentUser();
+
+        assertEquals(1L, result.getId());
+        assertEquals("Ariel", result.getFirstName());
+        assertEquals("iwannajob@gmail.com", result.getEmail());
+    }
+
+    @Test
+    void getCurrentUser_throwsAccessDenied_whenAccountHasNoUserProfile() {
+
+        when(currentUserService.getAuthenticatedUser())
+                .thenThrow(new AccessDeniedException("No user profile found for this account"));
+
+        assertThrows(AccessDeniedException.class, () -> userService.getCurrentUser());
     }
 }

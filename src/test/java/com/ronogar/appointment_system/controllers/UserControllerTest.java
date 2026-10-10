@@ -88,8 +88,8 @@ public class UserControllerTest {
                 .thenThrow(new DuplicateResourceException("email already in use"));
 
         mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isConflict());
 
     }
@@ -114,7 +114,7 @@ public class UserControllerTest {
         when(userService.getUserById(userId)).thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(get("/api/users/{id}", userId)
-                .with(user("testUser").roles("USER")))
+                        .with(user("testUser").roles("USER")))
                 .andExpect(status().isNotFound());
     }
 
@@ -153,9 +153,48 @@ public class UserControllerTest {
 
         when(userService.getUserByEmail(email)).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/api/users/email/{email}", email).with(user("testUser").roles("USER")))
+        mockMvc.perform(get("/api/users/email/{email}", email).with(user("adminUser").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(email));
+    }
+
+    @Test
+    void getUsersByEmail_asUser_returns403() throws Exception {
+
+        mockMvc.perform(get("/api/users/email/{email}", "someone@gmail.com").with(user("testUser").roles("USER")))
+                .andExpect(status().isForbidden());
+
+        verify(userService, never()).getUserByEmail(anyString());
+    }
+
+    @Test
+    void getUsersByLastName_asUser_returns403() throws Exception {
+
+        mockMvc.perform(get("/api/users/lastname/{lastName}", "Abucewicz").with(user("testUser").roles("USER")))
+                .andExpect(status().isForbidden());
+
+        verify(userService, never()).getUserByLastName(anyString());
+    }
+
+    @Test
+    void getCurrentUser_authenticated_returns200() throws Exception {
+
+        UserResponseDTO responseDTO = userResponse();
+
+        when(userService.getCurrentUser()).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/api/users/me").with(user("testUser").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(responseDTO.getEmail()));
+    }
+
+    @Test
+    void getCurrentUser_anonymous_returns401() throws Exception {
+
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isUnauthorized());
+
+        verify(userService, never()).getCurrentUser();
     }
 
     @Test
@@ -166,7 +205,7 @@ public class UserControllerTest {
         when(userService.getUserByEmail(email)).thenThrow(new ResourceNotFoundException("User with that email not found"));
 
         mockMvc.perform(get("/api/users/email/{email}", email)
-                .with(user("testUser").roles("USER")))
+                        .with(user("adminUser").roles("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
@@ -179,7 +218,7 @@ public class UserControllerTest {
 
         when(userService.getUserByLastName(lastName)).thenReturn(userResponseDTOList);
 
-        mockMvc.perform(get("/api/users/lastname/{lastName}", lastName).with(user("testUser").roles("USER")))
+        mockMvc.perform(get("/api/users/lastname/{lastName}", lastName).with(user("adminUser").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].lastName").value(lastName));
     }
@@ -200,7 +239,7 @@ public class UserControllerTest {
                 .when(userService).deleteUser(userId);
 
         mockMvc.perform(delete("/api/users/{id}", userId)
-                .with(user("testUser").roles("USER")))
+                        .with(user("testUser").roles("USER")))
                 .andExpect(status().isNotFound());
     }
 
@@ -239,8 +278,8 @@ public class UserControllerTest {
         String json = objectMapper.writeValueAsString(userPatch());
 
         mockMvc.perform(patch("/api/users/{id}", userId).with(user("testUser").roles("USER"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isNoContent());
     }
 
@@ -252,9 +291,9 @@ public class UserControllerTest {
                 .when(userService).patchUser(eq(userId), any(UserPatchDTO.class));
 
         mockMvc.perform(patch("/api/users/{id}", userId)
-                .with(user("testUser").roles("USER"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .with(user("testUser").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isNotFound());
     }
 

@@ -58,6 +58,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponseDTO getCurrentUser() {
+        return toDto(currentUserService.getAuthenticatedUser());
+    }
+
+    @Override
     public UserResponseDTO getUserById(Long id) {
 
         User user = userRepository.findById(id)

@@ -9,6 +9,7 @@ import java.util.List;
 public interface UserService {
 
     List<UserResponseDTO> getAllUsers();
+    UserResponseDTO getCurrentUser();
     UserResponseDTO getUserById(Long id);
     UserResponseDTO getUserByEmail(String email);
     List<UserResponseDTO> getUserByLastName(String lastName);

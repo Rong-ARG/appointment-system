@@ -89,11 +89,7 @@ async function getMyUserId() {
 }
 
 async function getMyUser() {
-  const payload = decodeToken();
-  if (!payload || !payload.sub) {
-    throw new Error("Could not read current user from token");
-  }
-  return await apiFetch(`/api/users/email/${encodeURIComponent(payload.sub)}`);
+  return await apiFetch("/api/users/me");
 }
 
 async function getMyProfessional() {
