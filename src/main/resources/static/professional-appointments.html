@@ -74,25 +74,43 @@
                 const row = document.createElement("div");
                 row.className = "result-row";
 
-                const actions = appt.status === "PENDING"
-                    ? `<button class="confirm-btn" data-id="${appt.id}" data-status="CONFIRMED">Confirm</button>
-             <button class="secondary cancel-btn" data-id="${appt.id}" data-status="CANCELLED">Cancel</button>`
-                    : "";
+                const info = document.createElement("div");
 
-                row.innerHTML = `
-          <div>
-            <strong>${appt.user.firstName} ${appt.user.lastName}</strong>
-            <span class="${statusBadgeClass(appt.status)}">${appt.status}</span>
-            <p>${formatDate(appt.dateTime)}</p>
-            <p>${appt.user.email} · ${appt.user.phone ?? ""}</p>
-          </div>
-          <div class="row-actions">${actions}</div>
-        `;
+                const nameEl = document.createElement("strong");
+                nameEl.textContent = `${appt.user.firstName} ${appt.user.lastName}`;
+
+                const badge = document.createElement("span");
+                badge.className = statusBadgeClass(appt.status);
+                badge.textContent = appt.status;
+
+                const dateEl = document.createElement("p");
+                dateEl.textContent = formatDate(appt.dateTime);
+
+                const contactEl = document.createElement("p");
+                contactEl.textContent = `${appt.user.email} · ${appt.user.phone ?? ""}`;
+
+                // un espacio entre el nombre y el badge, como en el HTML original
+                info.append(nameEl, " ", badge, dateEl, contactEl);
+
+                const actions = document.createElement("div");
+                actions.className = "row-actions";
+
+                if (appt.status === "PENDING") {
+                    const confirmBtn = document.createElement("button");
+                    confirmBtn.className = "confirm-btn";
+                    confirmBtn.textContent = "Confirm";
+                    confirmBtn.addEventListener("click", () => updateStatus(appt.id, "CONFIRMED"));
+
+                    const cancelBtn = document.createElement("button");
+                    cancelBtn.className = "secondary cancel-btn";
+                    cancelBtn.textContent = "Cancel";
+                    cancelBtn.addEventListener("click", () => updateStatus(appt.id, "CANCELLED"));
+
+                    actions.append(confirmBtn, cancelBtn);
+                }
+
+                row.append(info, actions);
                 listEl.appendChild(row);
-            });
-
-            listEl.querySelectorAll("button[data-id]").forEach((btn) => {
-                btn.addEventListener("click", () => updateStatus(btn.dataset.id, btn.dataset.status));
             });
         } catch (err) {
             showStatus(statusEl, "Could not load your appointments: " + err.message, "error");

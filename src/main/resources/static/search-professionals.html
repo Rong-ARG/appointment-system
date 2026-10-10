@@ -44,18 +44,26 @@
     list.forEach((prof) => {
       const row = document.createElement("div");
       row.className = "result-row";
-      row.innerHTML = `
-        <div>
-          <div class="name">${prof.firstName ?? ""} ${prof.lastName ?? ""}</div>
-          <div class="meta">${prof.specialty ?? prof.email ?? ""}</div>
-        </div>
-        <button class="request-btn" data-id="${prof.id}">Request appointment</button>
-      `;
-      resultsEl.appendChild(row);
-    });
 
-    resultsEl.querySelectorAll(".request-btn").forEach((btn) => {
-      btn.addEventListener("click", () => requestAppointment(btn.dataset.id));
+      const info = document.createElement("div");
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "name";
+      nameEl.textContent = `${prof.firstName ?? ""} ${prof.lastName ?? ""}`;
+
+      const metaEl = document.createElement("div");
+      metaEl.className = "meta";
+      metaEl.textContent = prof.specialty ?? prof.email ?? "";
+
+      info.append(nameEl, metaEl);
+
+      const requestBtn = document.createElement("button");
+      requestBtn.className = "request-btn";
+      requestBtn.textContent = "Request appointment";
+      requestBtn.addEventListener("click", () => requestAppointment(prof.id));
+
+      row.append(info, requestBtn);
+      resultsEl.appendChild(row);
     });
   }
 

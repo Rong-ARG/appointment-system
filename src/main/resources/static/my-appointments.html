@@ -40,18 +40,27 @@
         list.forEach((appt) => {
             const row = document.createElement("div");
             row.className = "result-row";
-            row.innerHTML = `
-        <div>
-          <div class="name">${appt.dateTime ?? ""}</div>
-          <div class="meta">Dr. ${appt.professional?.firstName ?? ""} ${appt.professional?.lastName ?? ""} — ${appt.status ?? ""}</div>
-        </div>
-        <button class="secondary cancel-btn" data-id="${appt.id}">Cancel</button>
-      `;
-            resultsEl.appendChild(row);
-        });
 
-        resultsEl.querySelectorAll(".cancel-btn").forEach((btn) => {
-            btn.addEventListener("click", () => cancelAppointment(btn.dataset.id));
+            const info = document.createElement("div");
+
+            const nameEl = document.createElement("div");
+            nameEl.className = "name";
+            nameEl.textContent = appt.dateTime ?? "";
+
+            const metaEl = document.createElement("div");
+            metaEl.className = "meta";
+            metaEl.textContent =
+                `Dr. ${appt.professional?.firstName ?? ""} ${appt.professional?.lastName ?? ""} — ${appt.status ?? ""}`;
+
+            info.append(nameEl, metaEl);
+
+            const cancelBtn = document.createElement("button");
+            cancelBtn.className = "secondary cancel-btn";
+            cancelBtn.textContent = "Cancel";
+            cancelBtn.addEventListener("click", () => cancelAppointment(appt.id));
+
+            row.append(info, cancelBtn);
+            resultsEl.appendChild(row);
         });
     }
 
