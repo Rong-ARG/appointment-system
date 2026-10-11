@@ -64,7 +64,7 @@ public class TestDataFactory {
 
         UserRequestDTO userRequestDTO = new UserRequestDTO(
                 "Martin", "Fernandez",
-                "12345", "Martin@gmail.com",
+                "Password12345", "Martin@gmail.com",
                 "210512");
 
         return userRequestDTO;

@@ -3,6 +3,7 @@ package com.ronogar.appointment_system.dtos.user;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public class UserRequestDTO {
     private String lastName;
 
     @Schema(description = "Password of the user", example = "Password123wow")//wow
+    @Size(min = 8, message = "password too short")
     @NotBlank
     private String password;
 
