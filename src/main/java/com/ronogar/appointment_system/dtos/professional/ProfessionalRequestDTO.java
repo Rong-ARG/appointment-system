@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,7 @@ public class ProfessionalRequestDTO {
     private Boolean available;
 
     @Schema(description = "Password of the professional", example = "Wilsooooon123")
+    @Size(min = 8 , message = "password too short")
     @NotBlank
     private String password;
 }
