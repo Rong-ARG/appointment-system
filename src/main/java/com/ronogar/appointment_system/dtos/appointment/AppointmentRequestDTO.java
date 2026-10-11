@@ -2,6 +2,7 @@ package com.ronogar.appointment_system.dtos.appointment;
 
 import com.ronogar.appointment_system.enums.AppointmentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +25,8 @@ public class AppointmentRequestDTO {
     @NotNull
     private Long professionalId;
 
-    @Schema(description = "Date Time appointment", example = "2025-06-15T10:30:00")
+    @Schema(description = "Date Time appointment", example = "2027-06-15T10:30:00")
+    @Future
     @NotNull
     private LocalDateTime dateTime;
 
