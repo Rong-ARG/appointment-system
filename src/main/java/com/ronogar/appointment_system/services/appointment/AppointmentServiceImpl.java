@@ -6,6 +6,7 @@ import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
+import com.ronogar.appointment_system.enums.Role;
 import com.ronogar.appointment_system.exceptions.InvalidAppointmentStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
@@ -125,10 +126,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public void deleteAppointmentById(Long id) {
 
-        Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
+        Account account = currentUserService.getAuthenticatedAccount();
+        if (!account.getRoles().contains(Role.ADMIN)) {
+            throw new AccessDeniedException("Only an admin can delete appointments. Cancel it instead.");
+        }
 
-        verifyOwner(appointment);
+        appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("appointment with id " + id + " not found"));
 
         appointmentRepository.deleteById(id);
     }

@@ -4,6 +4,7 @@ import com.ronogar.appointment_system.dtos.appointment.AppointmentPatchDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
+import com.ronogar.appointment_system.enums.Role;
 import com.ronogar.appointment_system.exceptions.InvalidAppointmentStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
@@ -28,8 +29,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class AppointmentServiceImplTest {
@@ -319,6 +319,7 @@ public class AppointmentServiceImplTest {
 
         Account account = new Account();
         account.setId(1L);
+        account.setRoles(Collections.singleton(Role.ADMIN));
 
         User user = new User();
         user.setId(1L);
@@ -344,6 +345,11 @@ public class AppointmentServiceImplTest {
     @Test
     void deleteAppointment_ThrowsResourceNotFoundException_WhenAppointmentIsNotFound() {
 
+        Account account = new Account();
+        account.setId(1L);
+        account.setRoles(Collections.singleton(Role.ADMIN));
+
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(account);
         when(appointmentRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
@@ -351,34 +357,19 @@ public class AppointmentServiceImplTest {
     }
 
     @Test
-    void deleteAppointment_ThrowsAccessDenied_WhenNeitherUserNorProfessional() {
+    void deleteAppointment_ThrowsAccessDenied_WhenClientIsNotAdmin() {
 
         Account authAccount = new Account();
         authAccount.setId(1L);
+        authAccount.setRoles(Set.of(Role.USER));
 
-        Account otherAccount1 = new Account();
-        otherAccount1.setId(2L);
-
-        Account otherAccount2 = new Account();
-        otherAccount2.setId(3L);
-
-        User user = new User();
-        user.setId(1L);
-        user.setAccount(otherAccount1);
-
-        Professional professional = new Professional();
-        professional.setId(1L);
-        professional.setAccount(otherAccount2);
-
-        Appointment appointment = new Appointment();
-        appointment.setUser(user);
-        appointment.setProfessional(professional);
-
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
         when(currentUserService.getAuthenticatedAccount()).thenReturn(authAccount);
 
         assertThrows(AccessDeniedException.class,
                 () -> appointmentService.deleteAppointmentById(1L));
+
+        verify(appointmentRepository, never()).findById(any());
+        verify(appointmentRepository, never()).deleteById(any());
     }
 
     @Test
