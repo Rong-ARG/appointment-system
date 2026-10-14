@@ -20,7 +20,6 @@ function isLoggedIn() {
   const payload = decodeToken();
   if (!payload || !payload.exp) return false;
 
-  // payload.exp viene en segundos (estándar JWT), Date.now() en milisegundos.
   const isExpired = Date.now() >= payload.exp * 1000;
   if (isExpired) {
     clearToken();
@@ -36,7 +35,7 @@ async function apiFetch(path, options = {}) {
 
   const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
 
-  if (response.status === 401) {
+  if (response.status === 401 && token) {
     logout();
     throw new Error("Session expired, please log in again.");
   }
@@ -49,7 +48,9 @@ async function apiFetch(path, options = {}) {
 
   if (!response.ok) {
     const message = (body && (body.message || body.error)) || `Error ${response.status}`;
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    throw error;
   }
 
   return body;
@@ -99,7 +100,8 @@ async function getMyProfessional() {
   }
   try {
     return await apiFetch(`/api/professionals/email/${encodeURIComponent(payload.sub)}`);
-  } catch {
-    return null;
+  } catch (err) {
+    if (err.status === 404) return null;
+    throw err;
   }
 }
