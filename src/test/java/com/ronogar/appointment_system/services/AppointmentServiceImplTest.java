@@ -317,25 +317,12 @@ public class AppointmentServiceImplTest {
     @Test
     void deleteAppointment_DeletesAppointment_WhenDeleted() {
 
-        Account account = new Account();
-        account.setId(1L);
-        account.setRoles(Collections.singleton(Role.ADMIN));
+        Account adminAccount = new Account();
+        adminAccount.setId(1L);
+        adminAccount.setRoles(Collections.singleton(Role.ADMIN));
 
-        User user = new User();
-        user.setId(1L);
-        user.setAccount(account);
-
-        Professional professional = new Professional();
-        professional.setId(1L);
-        professional.setAccount(account);
-
-        Appointment appointment = new Appointment();
-        appointment.setId(1L);
-        appointment.setUser(user);
-        appointment.setProfessional(professional);
-
-        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
-        when(currentUserService.getAuthenticatedAccount()).thenReturn(account);
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(adminAccount);
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(new Appointment()));
 
         appointmentService.deleteAppointmentById(1L);
 
