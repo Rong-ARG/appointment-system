@@ -47,6 +47,7 @@ public class SecurityConfig {
                     authorizeRequests.requestMatchers(HttpMethod.POST, "/auth/login", "/api/users").permitAll();
                     authorizeRequests.requestMatchers(HttpMethod.POST, "/api/professionals").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN");
+                    authorizeRequests.requestMatchers(HttpMethod.DELETE, "/api/appointments/**").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/users/email/**", "/api/users/lastname/**").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/appointments").hasRole("ADMIN");
                     authorizeRequests.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();

@@ -206,17 +206,19 @@ public class AppointmentControllerTest {
         verify(appointmentService, never()).createAppointment(any(AppointmentRequestDTO.class));
     }
 
+    // CAMBIO: el borrado ahora es solo para ADMIN (antes usaba roles("USER")).
     @Test
-    void deleteAppointmentById_validId_returns204() throws Exception {
+    void deleteAppointmentById_authAdmin_returns204() throws Exception {
         Long id = 2L;
 
         mockMvc.perform(delete("/api/appointments/{id}", id)
-                        .with(user("user").roles("USER")))
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNoContent());
 
         verify(appointmentService, times(1)).deleteAppointmentById(id);
     }
 
+    // CAMBIO: mismo motivo, el 404 se prueba con un ADMIN.
     @Test
     void deleteAppointmentById_invalidId_returns404() throws Exception {
 
@@ -224,10 +226,20 @@ public class AppointmentControllerTest {
                 .when(appointmentService).deleteAppointmentById(100L);
 
         mockMvc.perform(delete("/api/appointments/{id}", 100L)
-                        .with(user("user").roles("USER")))
+                        .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
 
         verify(appointmentService).deleteAppointmentById(100L);
+    }
+
+    @Test
+    void deleteAppointmentById_authUser_returns403() throws Exception {
+
+        mockMvc.perform(delete("/api/appointments/{id}", 2L)
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isForbidden());
+
+        verify(appointmentService, never()).deleteAppointmentById(any());
     }
 
     @Test
@@ -288,9 +300,9 @@ public class AppointmentControllerTest {
         String json = "{\"status\": \"INVALID\"}";
 
         mockMvc.perform(patch("/api/appointments/{id}", 100L)
-                .with(user("user").roles("USER"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .with(user("user").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isBadRequest());
 
         verify(appointmentService, never()).patchAppointment(eq(100L), any(AppointmentPatchDTO.class));
