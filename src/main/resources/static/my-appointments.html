@@ -53,13 +53,16 @@
                 `Dr. ${appt.professional?.firstName ?? ""} ${appt.professional?.lastName ?? ""} — ${appt.status ?? ""}`;
 
             info.append(nameEl, metaEl);
+            row.append(info);
 
-            const cancelBtn = document.createElement("button");
-            cancelBtn.className = "secondary cancel-btn";
-            cancelBtn.textContent = "Cancel";
-            cancelBtn.addEventListener("click", () => cancelAppointment(appt.id));
+            if (appt.status === "PENDING" || appt.status === "CONFIRMED") {
+                const cancelBtn = document.createElement("button");
+                cancelBtn.className = "secondary cancel-btn";
+                cancelBtn.textContent = "Cancel";
+                cancelBtn.addEventListener("click", () => cancelAppointment(appt.id));
+                row.append(cancelBtn);
+            }
 
-            row.append(info, cancelBtn);
             resultsEl.appendChild(row);
         });
     }
@@ -77,7 +80,10 @@
     async function cancelAppointment(id) {
         if (!confirm("Cancel this appointment?")) return;
         try {
-            await apiFetch(`/api/appointments/${id}`, { method: "DELETE" });
+            await apiFetch(`/api/appointments/${id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: "CANCELLED" }),
+            });
             loadMyAppointments();
         } catch (err) {
             alert("Could not cancel: " + err.message);
