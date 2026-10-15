@@ -17,7 +17,7 @@ for my first job as a backend developer :)
 ## Key results
 
 - **150+ automated tests** (JUnit 5, Mockito and MockMvc), with CI on GitHub Actions
-- **14 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
+- **15 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
 - **27 REST endpoints** across auth, users, professionals and appointments
 - **JWT authentication** with ownership checks, so users can only access their own data
 
@@ -29,7 +29,7 @@ for my first job as a backend developer :)
 - Professionals can confirm or cancel the appointments booked with them
 - Appointments are cancelled, not deleted: both sides keep the history, and physical deletion is ADMIN-only
 - Ownership checks: you can only see or modify appointments you're involved in
-- Business rules: a user or professional can't be deleted while they still have appointments
+- Business rules: a user or professional can't be deleted while they still have appointments; a professional's time slot can't be double-booked, and appointments can't be made with an unavailable professional or with oneself
 - Validation and error handling that return clear JSON messages
 - Swagger documentation and a test suite with JUnit 5 and Mockito
 
@@ -39,6 +39,7 @@ for my first job as a backend developer :)
 - **Shared `Account` model:** a person can be both a client and a professional without duplicating credentials
 - **Ownership checks in the service layer**, not only in the controllers
 - **Status transitions defined in the `AppointmentStatus` enum**, so the rules live next to the states
+- **A cancelled appointment frees its time slot:** the double-booking check only counts `PENDING` and `CONFIRMED` appointments, so a slot can be booked again after a cancellation
 - **Cancel, don't delete:** clients and professionals cancel through `PATCH` (status `CANCELLED`), so the state rules apply and the history is kept. `DELETE` on appointments is ADMIN-only, enforced both in `SecurityConfig` and in the service layer
 
 ## Technologies
@@ -150,7 +151,7 @@ Do the setup steps above first (properties file + database running), because `Ap
 | GET | /api/appointments/{id} | Get appointment by ID |
 | GET | /api/appointments/mine | Get the logged-in user's own appointments |
 | GET | /api/appointments/mineProf | Get appointments booked with the logged-in professional |
-| POST | /api/appointments | Create appointment |
+| POST | /api/appointments | Create appointment (the client is the logged-in user; it starts as `PENDING`) |
 | PATCH | /api/appointments/{id} | Update appointment status (either side can cancel, only the professional can confirm) |
 | DELETE | /api/appointments/{id} | Delete appointment (ADMIN only; clients and professionals cancel via PATCH) |
 
@@ -171,9 +172,9 @@ Do the setup steps above first (properties file + database running), because `Ap
 Things I found and fixed while building the project:
 
 <details>
-<summary>Show the 14 fixes</summary>
+<summary>Show the 15 fixes</summary>
 
-- Users could create appointments on behalf of other users — `userId` in the request body wasn't checked against the logged-in user.
+- Users could create appointments on behalf of other users — `userId` in the request body wasn't checked against the logged-in user. The field was later removed from the DTO: the client is now always taken from the token.
 - A `Professional` could be created without an existing `User` account — broke the "user first, professional later" model.
 - Anyone could turn someone else's account into a professional — `POST /api/professionals` is now ADMIN-only, self-service is done through `/me`.
 - `GET /api/appointments/{id}` (and delete/patch) didn't check if the logged-in user was actually involved in the appointment — added an ownership check (`verifyOwner`) shared across those methods.
@@ -185,6 +186,7 @@ Things I found and fixed while building the project:
 - Any authenticated user could look up another user's full profile by id (`GET /api/users/{id}`) — added an ownership check so only the user themself or an ADMIN can access it.
 - JWT expiration time was hardcoded in `JwtService` — moved to `application.properties`.
 - `JwtAuthFilter` silently swallowed all token validation errors with no logging — added a debug log so failures are traceable without exposing details to the client.
+- Appointments could be double-booked, created with a professional who was not available, or booked by a professional with themselves — `createAppointment` now rejects these cases with a 409.
 - Any participant of an appointment could hard-delete it through `DELETE /api/appointments/{id}`, skipping the status rules (and the client's Cancel button erased the row, so the professional lost the history) — deletion is now ADMIN-only (service layer + `SecurityConfig`) and the frontend cancels through `PATCH` instead.
 - Any participant of an appointment could set any status on it (a client could confirm their own appointment, or reopen a cancelled one) — `AppointmentStatus` now defines the allowed transitions, only the professional can confirm, and invalid changes return 409.
 
