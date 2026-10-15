@@ -345,6 +345,31 @@ public class AppointmentServiceImplTest {
     }
 
     @Test
+    void createAppointment_ThrowsInvalidState_WhenProfessionalIsNotAvailable() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Professional professional = new Professional();
+        professional.setId(2L);
+        professional.setAvailable(false);
+
+        AppointmentRequestDTO dto = new AppointmentRequestDTO();
+        dto.setUserId(1L);
+        dto.setProfessionalId(2L);
+        dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
+
+        assertThrows(InvalidAppointmentStateException.class,
+                () -> appointmentService.createAppointment(dto));
+
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
     void deleteAppointment_DeletesAppointment_WhenDeleted() {
 
         Account adminAccount = new Account();

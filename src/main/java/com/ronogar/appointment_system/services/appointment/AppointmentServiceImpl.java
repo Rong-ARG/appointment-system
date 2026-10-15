@@ -120,6 +120,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponseDTO createAppointment(AppointmentRequestDTO appointmentRequestDTO) {
         Appointment newAppointment = (toEntity(appointmentRequestDTO));
 
+        if (Boolean.FALSE.equals(newAppointment.getProfessional().getAvailable())){
+            throw new InvalidAppointmentStateException("The Professional is not available");
+        }
+
         boolean slotTaken = appointmentRepository.existsByProfessionalIdAndDateTimeAndStatusIn(
                 newAppointment.getProfessional().getId(),
                 newAppointment.getDateTime(),
