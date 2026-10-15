@@ -263,8 +263,16 @@ button.danger:hover { background: #8a3121; }
   align-items: center;
 }
 
-.result-row .name { font-weight: 600; }
+.result-row .name { font-weight: 600; white-space: nowrap; }
 .result-row .meta { color: var(--ink-soft); font-size: 0.88rem; }
+
+.result-row button {
+  width: auto;
+  margin-top: 0;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
 
 .search-row {
   display: flex;
