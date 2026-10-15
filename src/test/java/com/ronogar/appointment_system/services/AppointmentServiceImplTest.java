@@ -5,6 +5,7 @@ import com.ronogar.appointment_system.dtos.appointment.AppointmentRequestDTO;
 import com.ronogar.appointment_system.dtos.appointment.AppointmentResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
 import com.ronogar.appointment_system.enums.Role;
+import com.ronogar.appointment_system.exceptions.DuplicateResourceException;
 import com.ronogar.appointment_system.exceptions.InvalidAppointmentStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
@@ -259,6 +260,9 @@ public class AppointmentServiceImplTest {
         assertNotNull(result);
         assertEquals("John", result.getUser().getFirstName());
         verify(appointmentRepository).save(any(Appointment.class));
+        verify(appointmentRepository).existsByProfessionalIdAndDateTimeAndStatusIn(
+                1L, LocalDateTime.parse("2025-06-15T10:30:00"),
+                List.of(AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED));
 
     }
 
@@ -312,6 +316,32 @@ public class AppointmentServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> appointmentService.createAppointment(appointmentRequestDTO));
+    }
+
+    @Test
+    void createAppointment_ThrowsDuplicateResource_WhenSlotIsTaken() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Professional professional = new Professional();
+        professional.setId(2L);
+
+        AppointmentRequestDTO dto = new AppointmentRequestDTO();
+        dto.setUserId(1L);
+        dto.setProfessionalId(2L);
+        dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
+        when(appointmentRepository.existsByProfessionalIdAndDateTimeAndStatusIn(any(), any(), any()))
+                .thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class,
+                () -> appointmentService.createAppointment(dto));
+
+        verify(appointmentRepository, never()).save(any());
     }
 
     @Test

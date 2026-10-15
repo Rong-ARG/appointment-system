@@ -7,6 +7,7 @@ import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.user.UserResponseDTO;
 import com.ronogar.appointment_system.enums.AppointmentStatus;
 import com.ronogar.appointment_system.enums.Role;
+import com.ronogar.appointment_system.exceptions.DuplicateResourceException;
 import com.ronogar.appointment_system.exceptions.InvalidAppointmentStateException;
 import com.ronogar.appointment_system.exceptions.ResourceNotFoundException;
 import com.ronogar.appointment_system.models.Account;
@@ -118,6 +119,16 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional
     public AppointmentResponseDTO createAppointment(AppointmentRequestDTO appointmentRequestDTO) {
         Appointment newAppointment = (toEntity(appointmentRequestDTO));
+
+        boolean slotTaken = appointmentRepository.existsByProfessionalIdAndDateTimeAndStatusIn(
+                newAppointment.getProfessional().getId(),
+                newAppointment.getDateTime(),
+                List.of(AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED));
+
+        if(slotTaken){
+            throw new DuplicateResourceException("The professional already has a appointment at that time");
+        }
+
         Appointment savedAppointment = appointmentRepository.save(newAppointment);
         return toDto(savedAppointment);
     }
