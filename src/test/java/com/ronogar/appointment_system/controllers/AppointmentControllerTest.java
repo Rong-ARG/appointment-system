@@ -178,22 +178,6 @@ public class AppointmentControllerTest {
     }
 
     @Test
-    void createAppointment_nullUserId_returns400() throws Exception {
-        AppointmentRequestDTO appointmentRequestDTO = appointmentRequest();
-        appointmentRequestDTO.setUserId(null);
-
-        String json = objectMapper.writeValueAsString(appointmentRequestDTO);
-
-        mockMvc.perform(post("/api/appointments")
-                        .with(user("user").roles("USER"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isBadRequest());
-
-        verify(appointmentService, never()).createAppointment(any(AppointmentRequestDTO.class));
-    }
-
-    @Test
     void createAppointment_anonymous_returns401() throws Exception {
 
         String json = objectMapper.writeValueAsString(appointmentRequest());
@@ -206,7 +190,6 @@ public class AppointmentControllerTest {
         verify(appointmentService, never()).createAppointment(any(AppointmentRequestDTO.class));
     }
 
-    // CAMBIO: el borrado ahora es solo para ADMIN (antes usaba roles("USER")).
     @Test
     void deleteAppointmentById_authAdmin_returns204() throws Exception {
         Long id = 2L;
@@ -218,7 +201,6 @@ public class AppointmentControllerTest {
         verify(appointmentService, times(1)).deleteAppointmentById(id);
     }
 
-    // CAMBIO: mismo motivo, el 404 se prueba con un ADMIN.
     @Test
     void deleteAppointmentById_invalidId_returns404() throws Exception {
 

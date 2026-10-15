@@ -1,6 +1,5 @@
 package com.ronogar.appointment_system.dtos.appointment;
 
-import com.ronogar.appointment_system.enums.AppointmentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
@@ -17,10 +16,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class AppointmentRequestDTO {
 
-    @Schema(description = "Appointment User ID", example = "2")
-    @NotNull
-    private Long userId;
-
     @Schema(description = "Appointment Professional ID", example = "103")
     @NotNull
     private Long professionalId;
@@ -29,9 +24,5 @@ public class AppointmentRequestDTO {
     @Future
     @NotNull
     private LocalDateTime dateTime;
-
-    @Schema(description = "Appointment status", example = "CONFIRMED")
-    @NotNull
-    private AppointmentStatus status;
 
 }

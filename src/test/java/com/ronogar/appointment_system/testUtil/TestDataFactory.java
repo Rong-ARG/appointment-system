@@ -87,12 +87,7 @@ public class TestDataFactory {
     }
 
     public static AppointmentRequestDTO appointmentRequest() {
-
-        AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO(1L, 1L
-                , LocalDateTime.of(2029, 10, 15, 21, 30, 30)
-                , AppointmentStatus.PENDING);
-
-        return appointmentRequestDTO;
+        return new AppointmentRequestDTO(1L, LocalDateTime.of(2029, 10, 15, 21, 30, 30));
     }
 
     public static AppointmentPatchDTO appointmentPatch() {

@@ -14,7 +14,6 @@ import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
-import com.ronogar.appointment_system.repositories.UserRepository;
 import com.ronogar.appointment_system.services.appointment.AppointmentServiceImpl;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,9 +39,6 @@ public class AppointmentServiceImplTest {
 
     @Mock
     private ProfessionalRepository professionalRepository;
-
-    @Mock
-    private UserRepository userRepository;
 
     @Mock
     private CurrentUserService currentUserService;
@@ -238,19 +234,13 @@ public class AppointmentServiceImplTest {
         user.setAccount(account);
 
         AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO();
-        appointmentRequestDTO.setUserId(1L);
         appointmentRequestDTO.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
         appointmentRequestDTO.setProfessionalId(2L);
-
-        Appointment appointment = new Appointment();
-        appointment.setUser(user);
 
         Professional professional = new Professional();
         professional.setId(1L);
         professional.setAccount(account2);
-        appointment.setProfessional(professional);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
         when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
         when(appointmentRepository.save(any(Appointment.class))).then(invocation -> invocation.getArgument(0));
@@ -267,51 +257,11 @@ public class AppointmentServiceImplTest {
     }
 
     @Test
-    void createAppointment_ThrowsResourceNotFoundException_WhenUserNotFound() {
-
-        AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO();
-        appointmentRequestDTO.setUserId(1L);
-
-
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class,
-                () -> appointmentService.createAppointment(appointmentRequestDTO));
-    }
-
-    @Test
-    void createAppointment_ThrowsAccessDeniedException_WhenUserIsNotAuthorized() {
-
-        AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO();
-        appointmentRequestDTO.setUserId(1L);
-
-
-        User user = new User();
-        user.setId(1L);
-
-        User user2 = new User();
-        user2.setId(2L);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(currentUserService.getAuthenticatedUser()).thenReturn(user2);
-
-        assertThrows(AccessDeniedException.class,
-                ()-> appointmentService.createAppointment(appointmentRequestDTO));
-
-    }
-
-    @Test
     void createAppointment_ThrowsResourceNotFoundException_WhenProfessionalIsNotPresent() {
 
-        User user = new User();
-        user.setId(1L);
-
         AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO();
-        appointmentRequestDTO.setUserId(1L);
         appointmentRequestDTO.setProfessionalId(2L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
         when(professionalRepository.findById(2L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
@@ -327,12 +277,18 @@ public class AppointmentServiceImplTest {
         Professional professional = new Professional();
         professional.setId(2L);
 
+        Account userAccount = new Account();
+        userAccount.setId(1L);
+        user.setAccount(userAccount);
+
+        Account professionalAccount = new Account();
+        professionalAccount.setId(2L);
+        professional.setAccount(professionalAccount);
+
         AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setUserId(1L);
         dto.setProfessionalId(2L);
         dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
         when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
         when(appointmentRepository.existsByProfessionalIdAndDateTimeAndStatusIn(any(), any(), any()))
@@ -355,11 +311,36 @@ public class AppointmentServiceImplTest {
         professional.setAvailable(false);
 
         AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setUserId(1L);
         dto.setProfessionalId(2L);
         dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
+
+        assertThrows(InvalidAppointmentStateException.class,
+                () -> appointmentService.createAppointment(dto));
+
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void createAppointment_ThrowsInvalidState_WhenUserBooksWithThemselves() {
+
+        Account account = new Account();
+        account.setId(1L);
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        Professional professional = new Professional();
+        professional.setId(2L);
+        professional.setAccount(account);
+
+        AppointmentRequestDTO dto = new AppointmentRequestDTO();
+        dto.setProfessionalId(2L);
+        dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
+
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
         when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
 
