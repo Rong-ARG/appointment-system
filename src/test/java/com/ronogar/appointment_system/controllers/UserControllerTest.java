@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -295,6 +296,23 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void patchUser_emailAlreadyInUse_returns409() throws Exception {
+
+        Long userId = 1L;
+        String json = objectMapper.writeValueAsString(userPatch());
+
+        doThrow(new DataIntegrityViolationException("Duplicate entry"))
+                .when(userService).patchUser(eq(userId), any(UserPatchDTO.class));
+
+        mockMvc.perform(patch("/api/users/{id}", userId)
+                        .with(user("testUser").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").exists());
     }
 
 }
