@@ -289,4 +289,25 @@ public class AppointmentControllerTest {
 
         verify(appointmentService, never()).patchAppointment(eq(100L), any(AppointmentPatchDTO.class));
     }
+
+    @Test
+    void getAppointmentById_nonNumericId_returns400() throws Exception {
+        mockMvc.perform(get("/api/appointments/abc")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void putAppointment_methodNotSupported_returns405() throws Exception {
+        mockMvc.perform(put("/api/appointments/1")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    void unknownPath_returns404() throws Exception {
+        mockMvc.perform(get("/api/does-not-exist")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isNotFound());
+    }
 }
