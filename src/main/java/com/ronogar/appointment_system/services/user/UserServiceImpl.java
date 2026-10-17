@@ -119,6 +119,14 @@ public class UserServiceImpl implements UserService {
         return accountRepository.save(account);
     }
 
+    private void verifyEmailAvailable(String email, Account currentAccount) {
+        accountRepository.findByEmail(email)
+                .filter(found -> !found.getId().equals(currentAccount.getId()))
+                .ifPresent(found -> {
+                    throw new DuplicateResourceException("Email " + email + " is already in use");
+                });
+    }
+
     private Account createAccount(UserRequestDTO userRequestDTO) {
         Account account = new Account();
         account.setEmail(userRequestDTO.getEmail());
@@ -145,6 +153,7 @@ public class UserServiceImpl implements UserService {
         user.setPhone(userRequestDTO.getPhone());
 
         Account account = user.getAccount();
+        verifyEmailAvailable(userRequestDTO.getEmail(), account);
         account.setEmail(userRequestDTO.getEmail());
         account.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
 
@@ -200,6 +209,7 @@ public class UserServiceImpl implements UserService {
         }
         if (userPatchDTO.getEmail() != null) {
             Account account = user.getAccount();
+            verifyEmailAvailable(userPatchDTO.getEmail(), account);
             account.setEmail(userPatchDTO.getEmail());
             accountRepository.save(account);
         }

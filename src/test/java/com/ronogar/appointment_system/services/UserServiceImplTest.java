@@ -19,8 +19,7 @@ import com.ronogar.appointment_system.services.user.UserServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -484,5 +483,60 @@ public class UserServiceImplTest {
                 .thenThrow(new AccessDeniedException("No user profile found for this account"));
 
         assertThrows(AccessDeniedException.class, () -> userService.getCurrentUser());
+    }
+
+    @Test
+    public void patchUser_throwsDuplicateResourceException_WhenEmailBelongsToAnotherAccount() {
+
+        UserPatchDTO userPatchDTO = new UserPatchDTO();
+        userPatchDTO.setEmail("taken@gmail.com");
+
+        Account account = new Account();
+        account.setId(1L);
+        account.setEmail("Iwannajob@gmail.com");
+
+        Account otherAccount = new Account();
+        otherAccount.setId(2L);
+        otherAccount.setEmail("taken@gmail.com");
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(accountRepository.findByEmail("taken@gmail.com")).thenReturn(Optional.of(otherAccount));
+
+        assertThrows(DuplicateResourceException.class,
+                () -> userService.patchUser(1L, userPatchDTO));
+
+        assertEquals("Iwannajob@gmail.com", account.getEmail());
+        verify(accountRepository, never()).save(any(Account.class));
+    }
+
+    @Test
+    public void updateUser_doesNotThrow_WhenEmailIsTheUsersOwn() {
+
+        Account account = new Account();
+        account.setId(1L);
+        account.setEmail("Iwannajob@gmail.com");
+
+        User user = new User();
+        user.setId(1L);
+        user.setAccount(account);
+
+        UserRequestDTO userRequestDTO = new UserRequestDTO();
+        userRequestDTO.setFirstName("Juan");
+        userRequestDTO.setLastName("llanos");
+        userRequestDTO.setPassword("1234");
+        userRequestDTO.setEmail("Iwannajob@gmail.com");
+        userRequestDTO.setPhone("125123");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
+        when(accountRepository.findByEmail("Iwannajob@gmail.com")).thenReturn(Optional.of(account));
+        when(passwordEncoder.encode("1234")).thenReturn("PasswordEncrypted");
+
+        assertDoesNotThrow(() -> userService.updateUser(1L, userRequestDTO));
     }
 }
