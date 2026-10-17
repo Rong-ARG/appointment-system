@@ -39,7 +39,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointment.setDateTime(dto.getDateTime());
         appointment.setStatus(AppointmentStatus.PENDING);
 
-        Professional professional = professionalRepository.findById(dto.getProfessionalId())
+        Professional professional = professionalRepository.findByIdForUpdate(dto.getProfessionalId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Professional with id " + dto.getProfessionalId() + " not found"));
 

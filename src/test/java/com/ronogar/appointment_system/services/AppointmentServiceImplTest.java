@@ -242,7 +242,7 @@ public class AppointmentServiceImplTest {
         professional.setAccount(account2);
 
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
-        when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
+        when(professionalRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(professional));
         when(appointmentRepository.save(any(Appointment.class))).then(invocation -> invocation.getArgument(0));
 
         AppointmentResponseDTO result = appointmentService.createAppointment(appointmentRequestDTO);
@@ -262,7 +262,7 @@ public class AppointmentServiceImplTest {
         AppointmentRequestDTO appointmentRequestDTO = new AppointmentRequestDTO();
         appointmentRequestDTO.setProfessionalId(2L);
 
-        when(professionalRepository.findById(2L)).thenReturn(Optional.empty());
+        when(professionalRepository.findByIdForUpdate(2L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
                 () -> appointmentService.createAppointment(appointmentRequestDTO));
@@ -290,7 +290,7 @@ public class AppointmentServiceImplTest {
         dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
 
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
-        when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
+        when(professionalRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(professional));
         when(appointmentRepository.existsByProfessionalIdAndDateTimeAndStatusIn(any(), any(), any()))
                 .thenReturn(true);
 
@@ -315,7 +315,7 @@ public class AppointmentServiceImplTest {
         dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
 
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
-        when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
+        when(professionalRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(professional));
 
         assertThrows(InvalidAppointmentStateException.class,
                 () -> appointmentService.createAppointment(dto));
@@ -342,7 +342,7 @@ public class AppointmentServiceImplTest {
         dto.setDateTime(LocalDateTime.parse("2025-06-15T10:30:00"));
 
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
-        when(professionalRepository.findById(2L)).thenReturn(Optional.of(professional));
+        when(professionalRepository.findByIdForUpdate(2L)).thenReturn(Optional.of(professional));
 
         assertThrows(InvalidAppointmentStateException.class,
                 () -> appointmentService.createAppointment(dto));

@@ -74,7 +74,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
-        log.error("Unexpected error", ex); // CAMBIO 2: registra el stack trace completo
+        log.error("Unexpected error", ex);
         Map<String, String> error = new HashMap<>();
         error.put("message", "Something went wrong. Please try again.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
