@@ -14,6 +14,7 @@ import com.ronogar.appointment_system.models.Professional;
 import com.ronogar.appointment_system.repositories.AccountRepository;
 import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
+import com.ronogar.appointment_system.services.account.AccountEmailValidator;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,6 +33,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     private final AccountRepository accountRepository;
     private final CurrentUserService currentUserService;
     private final AppointmentRepository appointmentRepository;
+    private final AccountEmailValidator accountEmailValidator;
 
     private Professional toEntity(ProfessionalRequestDTO dto) {
         Professional professional = new Professional();
@@ -170,6 +172,7 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         professional.setYearsOfExperience(professionalRequestDTO.getYearsOfExperience());
 
         Account account = professional.getAccount();
+        accountEmailValidator.verifyAvailable(professionalRequestDTO.getEmail(), account);
         account.setPassword(passwordEncoder.encode(professionalRequestDTO.getPassword()));
         account.setEmail(professionalRequestDTO.getEmail());
         accountRepository.save(account);
@@ -223,9 +226,9 @@ public class ProfessionalServiceImpl implements ProfessionalService {
 
         if (professionalPatchDTO.getEmail() != null) {
             Account account = professional1.getAccount();
+            accountEmailValidator.verifyAvailable(professionalPatchDTO.getEmail(), account);
             account.setEmail(professionalPatchDTO.getEmail());
             accountRepository.save(account);
-
         }
         if (professionalPatchDTO.getFirstName() != null) {
             professional1.setFirstName(professionalPatchDTO.getFirstName());

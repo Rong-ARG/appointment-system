@@ -14,6 +14,7 @@ import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AccountRepository;
 import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
+import com.ronogar.appointment_system.services.account.AccountEmailValidator;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import com.ronogar.appointment_system.services.user.UserServiceImpl;
 
@@ -48,6 +49,8 @@ public class UserServiceImplTest {
     @Mock
     private AppointmentRepository appointmentRepository;
 
+    @Mock
+    private AccountEmailValidator accountEmailValidator;
 
     @Mock
     private CurrentUserService currentUserService;
@@ -495,48 +498,19 @@ public class UserServiceImplTest {
         account.setId(1L);
         account.setEmail("Iwannajob@gmail.com");
 
-        Account otherAccount = new Account();
-        otherAccount.setId(2L);
-        otherAccount.setEmail("taken@gmail.com");
-
         User user = new User();
         user.setId(1L);
         user.setAccount(account);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(currentUserService.getAuthenticatedUser()).thenReturn(user);
-        when(accountRepository.findByEmail("taken@gmail.com")).thenReturn(Optional.of(otherAccount));
+        doThrow(new DuplicateResourceException("Email already in use"))
+                .when(accountEmailValidator).verifyAvailable("taken@gmail.com", account);
 
         assertThrows(DuplicateResourceException.class,
                 () -> userService.patchUser(1L, userPatchDTO));
 
         assertEquals("Iwannajob@gmail.com", account.getEmail());
         verify(accountRepository, never()).save(any(Account.class));
-    }
-
-    @Test
-    public void updateUser_doesNotThrow_WhenEmailIsTheUsersOwn() {
-
-        Account account = new Account();
-        account.setId(1L);
-        account.setEmail("Iwannajob@gmail.com");
-
-        User user = new User();
-        user.setId(1L);
-        user.setAccount(account);
-
-        UserRequestDTO userRequestDTO = new UserRequestDTO();
-        userRequestDTO.setFirstName("Juan");
-        userRequestDTO.setLastName("llanos");
-        userRequestDTO.setPassword("1234");
-        userRequestDTO.setEmail("Iwannajob@gmail.com");
-        userRequestDTO.setPhone("125123");
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(currentUserService.getAuthenticatedUser()).thenReturn(user);
-        when(accountRepository.findByEmail("Iwannajob@gmail.com")).thenReturn(Optional.of(account));
-        when(passwordEncoder.encode("1234")).thenReturn("PasswordEncrypted");
-
-        assertDoesNotThrow(() -> userService.updateUser(1L, userRequestDTO));
     }
 }

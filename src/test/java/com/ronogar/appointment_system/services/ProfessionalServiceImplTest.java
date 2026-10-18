@@ -15,6 +15,7 @@ import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AccountRepository;
 import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.ProfessionalRepository;
+import com.ronogar.appointment_system.services.account.AccountEmailValidator;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import com.ronogar.appointment_system.services.professional.ProfessionalServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -32,8 +33,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ProfessionalServiceImplTest {
@@ -47,6 +47,9 @@ public class ProfessionalServiceImplTest {
 
     @Mock
     private AccountRepository accountRepository;
+
+    @Mock
+    private AccountEmailValidator accountEmailValidator;
 
     @Mock
     private ProfessionalRepository professionalRepository;
@@ -559,4 +562,31 @@ public class ProfessionalServiceImplTest {
         assertEquals("NeedACoffe@gmail.com", account.getEmail());
 
     }
+
+    @Test
+    void patchProfessional_throwsDuplicateResourceException_WhenEmailBelongsToAnotherAccount() {
+
+        ProfessionalPatchDTO professionalPatchDTO = new ProfessionalPatchDTO();
+        professionalPatchDTO.setEmail("taken@gmail.com");
+
+        Account account = new Account();
+        account.setId(1L);
+        account.setEmail("Something@gmail.com");
+
+        Professional professional = new Professional();
+        professional.setId(1L);
+        professional.setAccount(account);
+
+        when(professionalRepository.findById(1L)).thenReturn(Optional.of(professional));
+        when(currentUserService.getAuthenticatedAccount()).thenReturn(account);
+        doThrow(new DuplicateResourceException("Email already in use"))
+                .when(accountEmailValidator).verifyAvailable("taken@gmail.com", account);
+
+        assertThrows(DuplicateResourceException.class,
+                () -> professionalService.patchProfessional(1L, professionalPatchDTO));
+
+        assertEquals("Something@gmail.com", account.getEmail());
+        verify(accountRepository, never()).save(any(Account.class));
+    }
+
 }

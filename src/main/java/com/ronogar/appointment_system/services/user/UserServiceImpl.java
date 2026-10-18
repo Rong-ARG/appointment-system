@@ -13,6 +13,7 @@ import com.ronogar.appointment_system.models.User;
 import com.ronogar.appointment_system.repositories.AccountRepository;
 import com.ronogar.appointment_system.repositories.AppointmentRepository;
 import com.ronogar.appointment_system.repositories.UserRepository;
+import com.ronogar.appointment_system.services.account.AccountEmailValidator;
 import com.ronogar.appointment_system.services.auth.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final AccountRepository accountRepository;
     private final CurrentUserService currentUserService;
     private final AppointmentRepository appointmentRepository;
+    private final AccountEmailValidator accountEmailValidator;
 
     private User toEntity(UserRequestDTO userRequestDTO) {
         User user = new User();
@@ -119,14 +121,6 @@ public class UserServiceImpl implements UserService {
         return accountRepository.save(account);
     }
 
-    private void verifyEmailAvailable(String email, Account currentAccount) {
-        accountRepository.findByEmail(email)
-                .filter(found -> !found.getId().equals(currentAccount.getId()))
-                .ifPresent(found -> {
-                    throw new DuplicateResourceException("Email " + email + " is already in use");
-                });
-    }
-
     private Account createAccount(UserRequestDTO userRequestDTO) {
         Account account = new Account();
         account.setEmail(userRequestDTO.getEmail());
@@ -153,7 +147,7 @@ public class UserServiceImpl implements UserService {
         user.setPhone(userRequestDTO.getPhone());
 
         Account account = user.getAccount();
-        verifyEmailAvailable(userRequestDTO.getEmail(), account);
+        accountEmailValidator.verifyAvailable(userRequestDTO.getEmail(), account);
         account.setEmail(userRequestDTO.getEmail());
         account.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
 
@@ -209,7 +203,7 @@ public class UserServiceImpl implements UserService {
         }
         if (userPatchDTO.getEmail() != null) {
             Account account = user.getAccount();
-            verifyEmailAvailable(userPatchDTO.getEmail(), account);
+            accountEmailValidator.verifyAvailable(userPatchDTO.getEmail(), account);
             account.setEmail(userPatchDTO.getEmail());
             accountRepository.save(account);
         }
