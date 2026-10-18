@@ -218,12 +218,8 @@ public class UserServiceImplTest {
         userRequestDTO.setPassword("1234");
         userRequestDTO.setFirstName("Juan");
 
-        when(accountRepository.findByEmail("Iwannajob@gmail.com")).thenReturn(Optional.empty());
-
         when(passwordEncoder.encode(userRequestDTO.getPassword())).thenReturn("PasswordEncrypted");
-
         when(accountRepository.save(any(Account.class))).then(i -> i.getArgument(0));
-
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         UserResponseDTO result = userService.createUser(userRequestDTO);
@@ -236,20 +232,17 @@ public class UserServiceImplTest {
     @Test
     public void CreateUser_throwsDuplicateUser_whenEmailAlreadyExists() {
 
-        User existingUser = new User();
-
-        Account account = new Account();
-        account.setEmail("Iwannajob@gmail.com");
-        account.setUser(existingUser);
-
         UserRequestDTO userRequestDTO = new UserRequestDTO();
         userRequestDTO.setEmail("Iwannajob@gmail.com");
 
-        when(accountRepository.findByEmail("Iwannajob@gmail.com")).thenReturn(Optional.of(account));
+        doThrow(new DuplicateResourceException("Email already in use"))
+                .when(accountEmailValidator).verifyAvailable("Iwannajob@gmail.com");
 
         assertThrows(DuplicateResourceException.class,
                 () -> userService.createUser(userRequestDTO));
 
+        verify(accountRepository, never()).save(any(Account.class));
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test

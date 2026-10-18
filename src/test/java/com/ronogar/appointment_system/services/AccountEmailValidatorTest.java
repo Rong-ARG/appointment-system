@@ -57,4 +57,19 @@ public class AccountEmailValidatorTest {
 
         assertDoesNotThrow(() -> accountEmailValidator.verifyAvailable("free@gmail.com", current));
     }
+
+    @Test
+    void verifyAvailable_throwsDuplicateResourceException_WhenEmailAlreadyExists() {
+        when(accountRepository.findByEmail("taken@gmail.com")).thenReturn(Optional.of(new Account()));
+
+        assertThrows(DuplicateResourceException.class,
+                () -> accountEmailValidator.verifyAvailable("taken@gmail.com"));
+    }
+
+    @Test
+    void verifyAvailable_doesNotThrow_WhenEmailDoesNotExist() {
+        when(accountRepository.findByEmail("free@gmail.com")).thenReturn(Optional.empty());
+
+        assertDoesNotThrow(() -> accountEmailValidator.verifyAvailable("free@gmail.com"));
+    }
 }

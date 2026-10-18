@@ -19,4 +19,11 @@ public class AccountEmailValidator {
                     throw new DuplicateResourceException("Email " + email + " is already in use");
                 });
     }
+
+    public void verifyAvailable(String email) {
+        accountRepository.findByEmail(email)
+                .ifPresent(found -> {
+                    throw new DuplicateResourceException("Email " + email + " is already in use");
+                });
+    }
 }

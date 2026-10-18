@@ -101,24 +101,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
-        Account account = accountRepository.findByEmail(userRequestDTO.getEmail())
-                .map(this::attachUserRole)
-                .orElseGet(() -> createAccount(userRequestDTO));
+        accountEmailValidator.verifyAvailable(userRequestDTO.getEmail());
+
+        Account account = createAccount(userRequestDTO);
 
         User user = toEntity(userRequestDTO);
         user.setAccount(account);
         User saved = userRepository.save(user);
         return toDto(saved);
-    }
-
-    private Account attachUserRole(Account account) {
-        if (account.getUser() != null) {
-            throw new DuplicateResourceException(
-                    "A user profile already exists with email " + account.getEmail()
-            );
-        }
-        account.getRoles().add(Role.USER);
-        return accountRepository.save(account);
     }
 
     private Account createAccount(UserRequestDTO userRequestDTO) {
