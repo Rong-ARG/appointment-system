@@ -6,6 +6,7 @@ import com.ronogar.appointment_system.dtos.professional.ProfessionalResponseDTO;
 import com.ronogar.appointment_system.dtos.professional.ProfessionalSelfRequestDTO;
 import com.ronogar.appointment_system.services.professional.ProfessionalService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,12 +27,6 @@ public class ProfessionalController {
 
     private final ProfessionalService professionalService;
 
-    @Operation(summary = "Get all professionals", description = "Returns a list of all registered professionals")
-    @GetMapping
-    public ResponseEntity<List<ProfessionalResponseDTO>> getAllProfessionals() {
-        return ResponseEntity.ok(professionalService.getAllProfessionals());
-    }
-
     @Operation(summary = "Get professional by ID", description = "Returns a single professionals matching the given ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Professional retrieved successfully"),
@@ -51,25 +46,6 @@ public class ProfessionalController {
     @GetMapping("/email/{email}")
     public ResponseEntity<ProfessionalResponseDTO> getProfessionalByEmail(@PathVariable String email) {
         return ResponseEntity.ok(professionalService.getProfessionalByEmail(email));
-    }
-
-    @Operation(summary = "Get professional by last name", description = "Returns a list of professional with matched with the last name provided")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of professional retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "professionals not founds with the last name provided")
-    })
-    @GetMapping("/lastname/{lastname}")
-    public ResponseEntity<List<ProfessionalResponseDTO>> getProfessionalByLastname(@PathVariable String lastname) {
-        return ResponseEntity.ok(professionalService.getProfessionalByLastName(lastname));
-    }
-    @Operation(summary = "Get professional specialty",description = "Gets professional specialty, example: dentist")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "List of specialty retrieved successfully"),
-            @ApiResponse(responseCode = "404", description = "Specialty not found")
-    })
-    @GetMapping("/specialty/{specialty}")
-    public ResponseEntity<List<ProfessionalResponseDTO>> getProfessionalSpecialty(@PathVariable String specialty) {
-        return  ResponseEntity.ok(professionalService.getProfessionalsBySpecialty(specialty));
     }
 
     @Operation(summary = "Create professional", description = "Create a new professional and returns the created resourced")
@@ -107,6 +83,7 @@ public class ProfessionalController {
         professionalService.updateProfessional(id, professionalRequestDTO);
         return ResponseEntity.noContent().build();
     }
+
     @Operation(summary = "Delete professional", description = "Delete Professional by ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Delete professional successfully"),
@@ -128,6 +105,17 @@ public class ProfessionalController {
     public ResponseEntity<Void> patchProfessional(@PathVariable Long id, @Valid @RequestBody ProfessionalPatchDTO professionalPatchDTO) {
         professionalService.patchProfessional(id, professionalPatchDTO);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Search professionals",
+            description = "Returns all professionals, optionally filtered by specialty and/or last name. An empty list means no matches")
+    @GetMapping
+    public ResponseEntity<List<ProfessionalResponseDTO>> searchProfessionals(
+            @Parameter(description = "Filter by specialty, example: dentist")
+            @RequestParam(required = false) String specialty,
+            @Parameter(description = "Filter by last name")
+            @RequestParam(required = false) String lastName) {
+        return ResponseEntity.ok(professionalService.searchProfessionals(specialty, lastName));
     }
 
 }

@@ -46,10 +46,41 @@ public class ProfessionalControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    void searchProfessionals_bySpecialty_returns200() throws Exception {
+        when(professionalService.searchProfessionals("welder", null)).thenReturn(List.of(professionalResponse()));
+
+        mockMvc.perform(get("/api/professionals").param("specialty", "welder")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].specialty").value("welder"));
+    }
+
+    @Test
+    void searchProfessionals_byLastName_returns200() throws Exception {
+        when(professionalService.searchProfessionals(null, "Rodriguez")).thenReturn(List.of(professionalResponse()));
+
+        mockMvc.perform(get("/api/professionals").param("lastName", "Rodriguez")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].lastName").value("Rodriguez"));
+    }
+
+    @Test
+    void searchProfessionals_noResults_returns200EmptyList() throws Exception {
+        when(professionalService.searchProfessionals("welder", null)).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/professionals").param("specialty", "welder")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
     void getAllProfessionals_authenticatedUser_returns200() throws Exception {
         List<ProfessionalResponseDTO> professionalsList = List.of(professionalResponse());
 
-        when(professionalService.getAllProfessionals()).thenReturn(professionalsList);
+        when(professionalService.searchProfessionals(null, null)).thenReturn(professionalsList);
 
         mockMvc.perform(get("/api/professionals").with(user("user").roles("USER")))
                 .andExpect(status().isOk())
@@ -100,58 +131,6 @@ public class ProfessionalControllerTest {
         mockMvc.perform(get("/api/professionals/email/{email}", email)
                         .with(user("user").roles("USER")))
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getProfessionalByLastName_validLastName_returns200() throws Exception {
-        String lastName = "Rodriguez";
-        List<ProfessionalResponseDTO> professional = List.of(professionalResponse());
-
-        when(professionalService.getProfessionalByLastName(lastName)).thenReturn(professional);
-
-        mockMvc.perform(get("/api/professionals/lastname/{lastname}", lastName)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].lastName").value("Rodriguez"));
-    }
-
-    @Test
-    void getProfessionalByLastName_noResults_returns200EmptyList() throws Exception {
-        String lastName = "Rodriguez";
-
-        when(professionalService.getProfessionalByLastName(lastName)).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/professionals/lastname/{lastname}", lastName)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
-    }
-
-    @Test
-    void getProfessionalBySpecialty_validSpecialty_returns200() throws Exception {
-        String specialty = "welder";
-        List<ProfessionalResponseDTO> professional = List.of(professionalResponse());
-
-        when(professionalService.getProfessionalsBySpecialty(specialty)).thenReturn(professional);
-
-        mockMvc.perform(get("/api/professionals/specialty/{specialty}", specialty)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].specialty").value("welder"));
-    }
-
-    @Test
-    void getProfessionalBySpecialty_noResults_returns200EmptyList() throws Exception {
-        String specialty = "welder";
-
-        when(professionalService.getProfessionalsBySpecialty(specialty)).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/professionals/specialty/{specialty}", specialty)
-                        .with(user("user").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test

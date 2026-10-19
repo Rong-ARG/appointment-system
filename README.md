@@ -1,7 +1,7 @@
 # Appointment System API
 
 [![CI](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-150%2B%20passing-success)
+![Tests](https://img.shields.io/badge/Tests-170%2B%20passing-success)
 ![Last commit](https://img.shields.io/github/last-commit/Rong-ARG/appointment-system)
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)
@@ -16,9 +16,9 @@ for my first job as a backend developer :)
 
 ## Key results
 
-- **150+ automated tests** (JUnit 5, Mockito and MockMvc), with CI on GitHub Actions
-- **15 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
-- **27 REST endpoints** across auth, users, professionals and appointments
+- **170+ automated tests** (JUnit 5, Mockito and MockMvc), with CI on GitHub Actions
+- **19 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
+- **25 REST endpoints** across auth, users, professionals and appointments
 - **JWT authentication** with ownership checks, so users can only access their own data
 
 ## Features
@@ -41,6 +41,8 @@ for my first job as a backend developer :)
 - **Status transitions defined in the `AppointmentStatus` enum**, so the rules live next to the states
 - **A cancelled appointment frees its time slot:** the double-booking check only counts `PENDING` and `CONFIRMED` appointments, so a slot can be booked again after a cancellation
 - **Cancel, don't delete:** clients and professionals cancel through `PATCH` (status `CANCELLED`), so the state rules apply and the history is kept. `DELETE` on appointments is ADMIN-only, enforced both in `SecurityConfig` and in the service layer
+- **An empty search is not an error:** `GET /api/professionals?specialty=...&lastName=...` returns `200` with an empty list when nothing matches; `404` is reserved for resources that don't exist
+- **One place for the email-uniqueness rule:** `AccountEmailValidator` is shared by sign-up and by the user and professional updates
 
 ## Technologies
 
@@ -132,11 +134,9 @@ Do the setup steps above first (properties file + database running), because `Ap
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/professionals | Get all professionals |
+| GET | /api/professionals | Get all professionals, or search with the optional `specialty` and `lastName` query params (empty list if nothing matches) |
 | GET | /api/professionals/{id} | Get professional by ID |
 | GET | /api/professionals/email/{email} | Get professional by email |
-| GET | /api/professionals/lastname/{lastName} | Get professionals by last name |
-| GET | /api/professionals/specialty/{specialty} | Get professionals by specialty |
 | POST | /api/professionals | Create professional (ADMIN only) |
 | POST | /api/professionals/me | Become a professional yourself (self-service, requires an existing user account) |
 | PUT | /api/professionals/{id} | Update professional |
@@ -162,17 +162,18 @@ Do the setup steps above first (properties file + database running), because `Ap
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
+- [ ] Integration and concurrency tests with Testcontainers
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
 - [x] Unit testing — AuthService / JwtService fully covered (6 tests)
 - [x] Unit testing — CurrentUserService
-- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (150+ tests in total across the project)
+- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (170+ tests in total across the project)
 
 ## Bugs and security fixes
 
 Things I found and fixed while building the project:
 
 <details>
-<summary>Show the 15 fixes</summary>
+<summary>Show the 19 fixes</summary>
 
 - Users could create appointments on behalf of other users — `userId` in the request body wasn't checked against the logged-in user. The field was later removed from the DTO: the client is now always taken from the token.
 - A `Professional` could be created without an existing `User` account — broke the "user first, professional later" model.
@@ -189,6 +190,10 @@ Things I found and fixed while building the project:
 - Appointments could be double-booked, created with a professional who was not available, or booked by a professional with themselves — `createAppointment` now rejects these cases with a 409.
 - Any participant of an appointment could hard-delete it through `DELETE /api/appointments/{id}`, skipping the status rules (and the client's Cancel button erased the row, so the professional lost the history) — deletion is now ADMIN-only (service layer + `SecurityConfig`) and the frontend cancels through `PATCH` instead.
 - Any participant of an appointment could set any status on it (a client could confirm their own appointment, or reopen a cancelled one) — `AppointmentStatus` now defines the allowed transitions, only the professional can confirm, and invalid changes return 409.
+- Two simultaneous requests could book the same time slot — `createAppointment` checked availability and then saved, so both requests could pass the check. The professional's row is now locked (`PESSIMISTIC_WRITE`, `findByIdForUpdate`) at the start of the transaction, so bookings for the same professional are processed one at a time.
+- Unknown routes, unsupported HTTP methods and malformed path values (like `/api/users/abc`) returned a generic 500 — the catch-all exception handler was swallowing Spring MVC's own exceptions. Added specific handlers that return 404, 405 and 400.
+- Changing an email to one that already belongs to another account ended in a 500 (the database unique constraint rejected it) — added an `AccountEmailValidator` that returns a clear 409 before saving, plus a handler for `DataIntegrityViolationException` as a safety net for race conditions.
+- `POST /api/users` (the public sign-up) modified an existing account without authentication when the email existed but had no user profile — sign-up now always returns 409 if the email is already registered.
 
 </details>
 

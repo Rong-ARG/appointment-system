@@ -96,7 +96,7 @@
   }
   async function loadBySpecialty(specialty) {
     try {
-      const data = await apiFetch(`/api/professionals/specialty/${encodeURIComponent(specialty)}`);
+      const data = await apiFetch(`/api/professionals?specialty=${encodeURIComponent(specialty)}`);
       renderResults(Array.isArray(data) ? data : [data]);
     } catch (err) {
       resultsEl.innerHTML = "";

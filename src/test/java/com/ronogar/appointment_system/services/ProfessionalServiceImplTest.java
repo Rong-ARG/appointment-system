@@ -61,6 +61,45 @@ public class ProfessionalServiceImplTest {
     private CurrentUserService currentUserService;
 
     @Test
+    void searchProfessionals_appliesBothFilters_WhenSpecialtyAndLastNameAreGiven() {
+        when(professionalRepository.findBySpecialty("Welder")).thenReturn(List.of(
+                professionalWith(1L, "Welder", "Smith"),
+                professionalWith(2L, "Welder", "Jones")));
+
+        List<ProfessionalResponseDTO> result = professionalService.searchProfessionals("Welder", "Smith");
+
+        assertEquals(1, result.size());
+        assertEquals("Smith", result.getFirst().getLastName());
+    }
+
+    @Test
+    void searchProfessionals_returnsAll_WhenNoFilters() {
+        when(professionalRepository.findAll()).thenReturn(List.of(professionalWith(1L, "Welder", "Smith")));
+
+        List<ProfessionalResponseDTO> result = professionalService.searchProfessionals(null, null);
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void searchProfessionals_filtersBySpecialty_WhenOnlySpecialtyIsGiven() {
+        when(professionalRepository.findBySpecialty("Welder")).thenReturn(List.of(professionalWith(1L, "Welder", "Smith")));
+
+        List<ProfessionalResponseDTO> result = professionalService.searchProfessionals("Welder", null);
+
+        assertEquals("Welder", result.getFirst().getSpecialty());
+    }
+
+    @Test
+    void searchProfessionals_filtersByLastName_WhenOnlyLastNameIsGiven() {
+        when(professionalRepository.findByLastName("Smith")).thenReturn(List.of(professionalWith(1L, "Welder", "Smith")));
+
+        List<ProfessionalResponseDTO> result = professionalService.searchProfessionals(null, "Smith");
+
+        assertEquals("Smith", result.getFirst().getLastName());
+    }
+
+    @Test
     void getAllProfessionals_returnsAllProfessionals_WhenAllProfessionalsExist() {
 
         Account account = new Account();
@@ -590,4 +629,14 @@ public class ProfessionalServiceImplTest {
         verify(accountRepository, never()).save(any(Account.class));
     }
 
+    private Professional professionalWith(Long id, String specialty, String lastName) {
+        Account account = new Account();
+        account.setId(id);
+        Professional professional = new Professional();
+        professional.setId(id);
+        professional.setSpecialty(specialty);
+        professional.setLastName(lastName);
+        professional.setAccount(account);
+        return professional;
+    }
 }

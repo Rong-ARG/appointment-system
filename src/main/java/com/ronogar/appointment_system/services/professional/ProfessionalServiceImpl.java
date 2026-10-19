@@ -70,6 +70,21 @@ public class ProfessionalServiceImpl implements ProfessionalService {
         return responseDTO;
     }
 
+    @Override
+    public List<ProfessionalResponseDTO> searchProfessionals(String specialty, String lastName) {
+        if (specialty != null && lastName != null) {
+            return getProfessionalsBySpecialty(specialty).stream()
+                    .filter(p -> lastName.equalsIgnoreCase(p.getLastName()))
+                    .toList();
+        }
+        if (specialty != null) {
+            return getProfessionalsBySpecialty(specialty);
+        }
+        if (lastName != null) {
+            return getProfessionalByLastName(lastName);
+        }
+        return getAllProfessionals();
+    }
 
     @Override
     public List<ProfessionalResponseDTO> getAllProfessionals() {

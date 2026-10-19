@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ProfessionalService {
 
+    List<ProfessionalResponseDTO> searchProfessionals(String specialty, String lastName);
+
     List<ProfessionalResponseDTO> getAllProfessionals();
     ProfessionalResponseDTO getProfessionalById(Long id);
     ProfessionalResponseDTO getProfessionalByEmail(String email);
