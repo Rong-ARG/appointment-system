@@ -116,15 +116,16 @@ public class ProfessionalControllerTest {
     }
 
     @Test
-    void getProfessionalByLastName_invalidLastName_returns404() throws Exception {
+    void getProfessionalByLastName_noResults_returns200EmptyList() throws Exception {
         String lastName = "Rodriguez";
 
-        when(professionalService.getProfessionalByLastName(lastName))
-                .thenThrow(new ResourceNotFoundException("Professional not found"));
+        when(professionalService.getProfessionalByLastName(lastName)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/professionals/lastname/{lastname}", lastName)
                         .with(user("user").roles("USER")))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test

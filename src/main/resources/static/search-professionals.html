@@ -37,6 +37,7 @@
   function renderResults(list) {
     resultsEl.innerHTML = "";
     if (!list || list.length === 0) {
+      emptyEl.textContent = "No professionals matched that search.";
       emptyEl.style.display = "block";
       return;
     }
@@ -99,7 +100,7 @@
       renderResults(Array.isArray(data) ? data : [data]);
     } catch (err) {
       resultsEl.innerHTML = "";
-      emptyEl.textContent = "No professionals found for that specialty.";
+      emptyEl.textContent = "Could not search professionals: " + err.message;
       emptyEl.style.display = "block";
     }
   }

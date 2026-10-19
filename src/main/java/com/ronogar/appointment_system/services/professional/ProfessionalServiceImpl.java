@@ -93,18 +93,12 @@ public class ProfessionalServiceImpl implements ProfessionalService {
     @Override
     public List<ProfessionalResponseDTO> getProfessionalByLastName(String lastName) {
         List<Professional> professionals = professionalRepository.findByLastName(lastName);
-        if (professionals.isEmpty()) {
-            throw new ResourceNotFoundException("professional with last name: " + lastName + " not found");
-        }
         return professionals.stream().map(this::toDto).toList();
     }
 
     @Override
     public List<ProfessionalResponseDTO> getProfessionalsBySpecialty(String specialty) {
         List<Professional> professionals = professionalRepository.findBySpecialty(specialty);
-        if (professionals.isEmpty()) {
-            throw new ResourceNotFoundException("professional with specialty: " + specialty + " not found");
-        }
         return professionals.stream().map(this::toDto).toList();
     }
 

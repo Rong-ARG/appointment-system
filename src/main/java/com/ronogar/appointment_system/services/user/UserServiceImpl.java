@@ -92,9 +92,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponseDTO> getUserByLastName(String lastname) {
         List<User> users = userRepository.findByLastName(lastname);
-        if (users.isEmpty()) {
-            throw new ResourceNotFoundException("User with last name " + lastname + " not found");
-        }
         return users.stream().map(this::toDto).toList();
     }
 

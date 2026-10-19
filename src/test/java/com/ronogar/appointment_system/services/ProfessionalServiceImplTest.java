@@ -154,12 +154,12 @@ public class ProfessionalServiceImplTest {
     }
 
     @Test
-    void getProfessionalByLastName_ThrowsResourceNotFoundException_WhenProfessionalDoesNotExist() {
-
+    void getProfessionalByLastName_returnsEmptyList_WhenNoProfessionalMatches() {
         when(professionalRepository.findByLastName("Smith")).thenReturn(List.of());
 
-        assertThrows(ResourceNotFoundException.class,
-                () -> professionalService.getProfessionalByLastName("Smith"));
+        List<ProfessionalResponseDTO> result = professionalService.getProfessionalByLastName("Smith");
+
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -183,11 +183,12 @@ public class ProfessionalServiceImplTest {
     }
 
     @Test
-    void getProfessionalBySpecialty_ThrowsResourceNotFoundException_WhenSpecialtyDoesNotExist() {
+    void getProfessionalBySpecialty_returnsEmptyList_WhenNoProfessionalMatches() {
         when(professionalRepository.findBySpecialty("Welder")).thenReturn(List.of());
 
-        assertThrows(ResourceNotFoundException.class,
-                () -> professionalService.getProfessionalsBySpecialty("Welder"));
+        List<ProfessionalResponseDTO> result = professionalService.getProfessionalsBySpecialty("Welder");
+
+        assertTrue(result.isEmpty());
     }
 
     @Test

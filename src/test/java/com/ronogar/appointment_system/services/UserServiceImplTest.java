@@ -204,10 +204,12 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void getUserByLastname_throwsResourceNotFound_whenLastNameNotFound() {
+    public void getUserByLastname_returnsEmptyList_whenNoUserMatches() {
         when(userRepository.findByLastName("llanos")).thenReturn(List.of());
-        assertThrows(ResourceNotFoundException.class, () -> userService.getUserByLastName("llanos"));
 
+        List<UserResponseDTO> result = userService.getUserByLastName("llanos");
+
+        assertTrue(result.isEmpty());
     }
 
     @Test
