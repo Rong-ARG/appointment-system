@@ -106,7 +106,7 @@ This is what the test frontend looks like once you log in:
 ./mvnw test
 ```
 
-Do the setup steps above first (properties file + database running), because `AppointmentSystemApplicationTests` loads the full Spring context. The rest of the tests use mocks and don't need the database.
+Do the setup steps above first (at least the properties file) and make sure Docker is running: `AppointmentSystemApplicationTests` loads the full Spring context against a temporary MySQL container started by Testcontainers, so you don't need `docker compose up` for the tests. The rest of the tests use mocks.
 
 ## API Endpoints
 
@@ -162,7 +162,8 @@ Do the setup steps above first (properties file + database running), because `Ap
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [ ] Flyway migrations
-- [ ] Integration and concurrency tests with Testcontainers
+- [x] Testcontainers: the Spring context test runs against a throwaway MySQL container
+- [ ] Concurrency test for the double-booking lock (Testcontainers)
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
 - [x] Unit testing — AuthService / JwtService fully covered (6 tests)
 - [x] Unit testing — CurrentUserService
