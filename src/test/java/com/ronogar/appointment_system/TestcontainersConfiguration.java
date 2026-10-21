@@ -13,7 +13,7 @@ public class TestcontainersConfiguration {
     @ServiceConnection
     MySQLContainer mysqlContainer() {
         return new MySQLContainer(
-                DockerImageName.parse("public.ecr.aws/docker/library/mysql:8")
+                DockerImageName.parse("mirror.gcr.io/library/mysql:8")
                         .asCompatibleSubstituteFor("mysql"));
     }
 }
