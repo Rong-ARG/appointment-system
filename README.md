@@ -42,6 +42,8 @@ for my first job as a backend developer :)
 - **A cancelled appointment frees its time slot:** the double-booking check only counts `PENDING` and `CONFIRMED` appointments, so a slot can be booked again after a cancellation
 - **Cancel, don't delete:** clients and professionals cancel through `PATCH` (status `CANCELLED`), so the state rules apply and the history is kept. `DELETE` on appointments is ADMIN-only, enforced both in `SecurityConfig` and in the service layer
 - **An empty search is not an error:** `GET /api/professionals?specialty=...&lastName=...` returns `200` with an empty list when nothing matches; `404` is reserved for resources that don't exist
+- **The database schema is versioned with Flyway:** migrations live in `src/main/resources/db/migration`, Hibernate only validates the schema (`ddl-auto=validate`) and the integration tests apply every migration to an empty MySQL container
+- **Double booking is prevented twice:** by a pessimistic lock in the service and by a unique index in the database (`professional_id` plus a generated `active_slot` column that is `NULL` for cancelled appointments, so a cancelled appointment still frees its slot)
 - **One place for the email-uniqueness rule:** `AccountEmailValidator` is shared by sign-up and by the user and professional updates
 
 ## Technologies
@@ -50,7 +52,7 @@ for my first job as a backend developer :)
 |-------|-------|---------|
 | Language and framework | ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white) | Java 21 and Spring Boot 4.1.0. REST API built with Spring Web MVC and Spring Data JPA, with Lombok and Jakarta Validation (`@NotBlank`, `@Email`, `@Valid`) for the DTOs |
 | Security | ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white) | Spring Security with JWT (auth0 java-jwt 4.6.0): authentication, role-based access and ownership checks |
-| Database | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white) | MySQL 8 accessed through Hibernate (the JPA implementation behind Spring Data JPA), run locally with Docker Compose |
+| Database | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white) | MySQL 8 accessed through Hibernate (the JPA implementation behind Spring Data JPA), run locally with Docker Compose. The schema is versioned with Flyway migrations and Hibernate only validates it |
 | API documentation | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black) | springdoc-openapi 3.1.1, serving Swagger UI |
 | Testing | ![JUnit5](https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTMuMiAxNy44IDVIMjF2MTRoLTNWMTAuNGwtNiA4LjYtNi04LjZWMTl6Ii8%2BPC9zdmc%2BCg%3D%3D) | JUnit 5 and Mockito for service tests, MockMvc with Spring Security Test for controllers and access rules, and Testcontainers (MySQL) for integration tests against a real database |
 | Build and CI | ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) | Maven Wrapper for the build, Docker Compose for the local database, and GitHub Actions running the tests (the integration tests start their own MySQL container with Testcontainers) |
@@ -85,7 +87,7 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
    ```
    cp src/main/resources/application.properties.example src/main/resources/application.properties
    ```
-3. Start the database
+3. Start the database (the first time, give MySQL about 20 seconds to initialise)
    ```
    docker compose up -d
    ```
@@ -161,7 +163,7 @@ Do the setup steps above first (at least the properties file) and make sure Dock
 - [x] Swagger / OpenAPI documentation
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
-- [ ] Flyway migrations
+- [x] Flyway migrations (versioned schema, Hibernate only validates it)
 - [x] Testcontainers: the Spring context test runs against a throwaway MySQL container
 - [x] Concurrency test for the double-booking lock, run against a real MySQL container (Testcontainers)
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
@@ -191,7 +193,7 @@ Things I found and fixed while building the project:
 - Appointments could be double-booked, created with a professional who was not available, or booked by a professional with themselves — `createAppointment` now rejects these cases with a 409.
 - Any participant of an appointment could hard-delete it through `DELETE /api/appointments/{id}`, skipping the status rules (and the client's Cancel button erased the row, so the professional lost the history) — deletion is now ADMIN-only (service layer + `SecurityConfig`) and the frontend cancels through `PATCH` instead.
 - Any participant of an appointment could set any status on it (a client could confirm their own appointment, or reopen a cancelled one) — `AppointmentStatus` now defines the allowed transitions, only the professional can confirm, and invalid changes return 409.
-- Two simultaneous requests could book the same time slot — `createAppointment` checked availability and then saved, so both requests could pass the check. The professional's row is now locked (`PESSIMISTIC_WRITE`, `findByIdForUpdate`) at the start of the transaction, so bookings for the same professional are processed one at a time. Covered by an integration test that fires 5 simultaneous bookings for the same slot against a real MySQL container: exactly one succeeds (without the lock, all 5 did).
+- Two simultaneous requests could book the same time slot — `createAppointment` checked availability and then saved, so both requests could pass the check. The professional's row is now locked (`PESSIMISTIC_WRITE`, `findByIdForUpdate`) at the start of the transaction, so bookings for the same professional are processed one at a time. Covered by an integration test that fires 5 simultaneous bookings for the same slot against a real MySQL container: exactly one succeeds (without the lock, all 5 did). The rule is also enforced by the database itself with a unique index (Flyway migration V2), so no other code path can create a duplicate.
 - Unknown routes, unsupported HTTP methods and malformed path values (like `/api/users/abc`) returned a generic 500 — the catch-all exception handler was swallowing Spring MVC's own exceptions. Added specific handlers that return 404, 405 and 400.
 - Changing an email to one that already belongs to another account ended in a 500 (the database unique constraint rejected it) — added an `AccountEmailValidator` that returns a clear 409 before saving, plus a handler for `DataIntegrityViolationException` as a safety net for race conditions.
 - `POST /api/users` (the public sign-up) modified an existing account without authentication when the email existed but had no user profile — sign-up now always returns 409 if the email is already registered.
