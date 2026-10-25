@@ -9,3 +9,22 @@ services:
       MYSQL_PASSWORD: admin
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+
+  app:
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/appointment_system
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in a .env file, see .env.example}
+    ports:
+      - "8080:8080"

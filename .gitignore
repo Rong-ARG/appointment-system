@@ -5,6 +5,9 @@ target/
 !**/src/test/**/target/
 src/main/resources/application.properties
 
+### Environment variables ###
+.env
+
 ### STS ###
 .apt_generated
 .classpath

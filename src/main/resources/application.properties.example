@@ -10,7 +10,7 @@ spring.jpa.show-sql=true
 
 # demo key just so the project runs out of the box
 # (in a real app this would come from an env variable, not from this file)
-security.jwt.key.private=change-me-demo-key
+security.jwt.key.private=${JWT_SECRET:change-me-demo-key-use-at-least-32-characters}
 security.jwt.user.generator=AUTH0JWT-BACKEND
 security.jwt.expiration.time=1800000
 

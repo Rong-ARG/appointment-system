@@ -1,0 +1,5 @@
+target/
+.git/
+.idea/
+.env
+src/main/resources/application.properties
