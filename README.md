@@ -55,13 +55,13 @@ for my first job as a backend developer :)
 | Database | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white) | MySQL 8 accessed through Hibernate (the JPA implementation behind Spring Data JPA), run locally with Docker Compose. The schema is versioned with Flyway migrations and Hibernate only validates it |
 | API documentation | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black) | springdoc-openapi 3.1.1, serving Swagger UI |
 | Testing | ![JUnit5](https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTMuMiAxNy44IDVIMjF2MTRoLTNWMTAuNGwtNiA4LjYtNi04LjZWMTl6Ii8%2BPC9zdmc%2BCg%3D%3D) | JUnit 5 and Mockito for service tests, MockMvc with Spring Security Test for controllers and access rules, and Testcontainers (MySQL) for integration tests against a real database |
-| Build and CI | ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) | Maven Wrapper for the build, Docker Compose for the local database, and GitHub Actions running the tests (the integration tests start their own MySQL container with Testcontainers) |
+| Build and CI | ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) | Maven Wrapper for the build, a multi-stage Dockerfile and Docker Compose to run the app together with its database, and GitHub Actions running the tests (the integration tests start their own MySQL container with Testcontainers) |
 | Test frontend | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) | Minimal client (plain HTML, CSS and JavaScript) to exercise the login and appointment flows |
 
 ## Notes
 
 - `application.properties` is not committed (it's in `.gitignore`), use `application.properties.example` as a starting point
-- The JWT key in the example file is just a demo value so the project runs out of the box. In a real app it should never be hardcoded, it would come from an environment variable instead.
+- The JWT key is read from the `JWT_SECRET` environment variable (Docker Compose takes it from your `.env` file). The example properties file only has a demo fallback so the project runs out of the box: use your own value anywhere real.
 
 ## API Documentation
 
@@ -73,10 +73,19 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
 
 ### Prerequisites
 
-- Java 21
 - Docker
+- Java 21 (only if you run the app or the tests outside Docker)
 
-### Setup
+### Quick start with Docker (app + database)
+
+```
+cp .env.example .env
+docker compose up --build
+```
+
+Then open http://localhost:8080/login.html or the Swagger UI. The `.env` file holds the `JWT_SECRET` used to sign tokens: put your own value there (for example the output of `openssl rand -hex 32`). The app waits for MySQL to be healthy and Flyway creates the schema on the first run.
+
+### Run from source (development)
 
 1. Clone the repository
    ```
@@ -87,9 +96,9 @@ Swagger UI available at: http://localhost:8080/swagger-ui/index.html
    ```
    cp src/main/resources/application.properties.example src/main/resources/application.properties
    ```
-3. Start the database (the first time, give MySQL about 20 seconds to initialise)
+3. Start only the database (the first time, give MySQL about 20 seconds to initialise)
    ```
-   docker compose up -d
+   docker compose up -d mysql
    ```
 4. Run the application
    ```
@@ -164,6 +173,7 @@ Do the setup steps above first (at least the properties file) and make sure Dock
 - [x] Spring Security + JWT
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [x] Flyway migrations (versioned schema, Hibernate only validates it)
+- [x] Dockerfile and the full stack (app + database) with Docker Compose
 - [x] Testcontainers: the Spring context test runs against a throwaway MySQL container
 - [x] Concurrency test for the double-booking lock, run against a real MySQL container (Testcontainers)
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
