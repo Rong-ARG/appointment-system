@@ -7,7 +7,6 @@ spring.datasource.password=admin
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
 # demo key just so the project runs out of the box
 # (in a real app this would come from an env variable, not from this file)
