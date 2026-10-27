@@ -17,6 +17,7 @@ for my first job as a backend developer :)
 ## Key results
 
 - **170+ automated tests** (JUnit 5, Mockito, MockMvc and Testcontainers), with CI on GitHub Actions
+- **93% instruction coverage and 87% branch coverage**, measured with JaCoCo
 - **19 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
 - **25 REST endpoints** across auth, users, professionals and appointments
 - **JWT authentication** with ownership checks, so users can only access their own data
@@ -54,7 +55,7 @@ for my first job as a backend developer :)
 | Security | ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white) | Spring Security with JWT (auth0 java-jwt 4.6.0): authentication, role-based access and ownership checks |
 | Database | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white) | MySQL 8 accessed through Hibernate (the JPA implementation behind Spring Data JPA), run locally with Docker Compose. The schema is versioned with Flyway migrations and Hibernate only validates it |
 | API documentation | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black) | springdoc-openapi 3.1.1, serving Swagger UI |
-| Testing | ![JUnit5](https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTMuMiAxNy44IDVIMjF2MTRoLTNWMTAuNGwtNiA4LjYtNi04LjZWMTl6Ii8%2BPC9zdmc%2BCg%3D%3D) | JUnit 5 and Mockito for service tests, MockMvc with Spring Security Test for controllers and access rules, and Testcontainers (MySQL) for integration tests against a real database |
+| Testing | ![JUnit5](https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTMuMiAxNy44IDVIMjF2MTRoLTNWMTAuNGwtNiA4LjYtNi04LjZWMTl6Ii8%2BPC9zdmc%2BCg%3D%3D) | JUnit 5 and Mockito for service tests, MockMvc with Spring Security Test for controllers and access rules, Testcontainers (MySQL) for integration tests against a real database, and JaCoCo for the coverage report |
 | Build and CI | ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) | Maven Wrapper for the build, a multi-stage Dockerfile and Docker Compose to run the app together with its database, and GitHub Actions running the tests (the integration tests start their own MySQL container with Testcontainers) |
 | Test frontend | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) | Minimal client (plain HTML, CSS and JavaScript) to exercise the login and appointment flows |
 
@@ -119,6 +120,8 @@ This is what the test frontend looks like once you log in:
 
 Do the setup steps above first (at least the properties file) and make sure Docker is running: the integration tests (`AppointmentSystemApplicationTests` and the concurrency test in `integration/`) run against a temporary MySQL container started by Testcontainers, so you don't need `docker compose up` for the tests. The rest of the tests use mocks.
 
+After the tests, a JaCoCo coverage report is generated at `target/site/jacoco/index.html`.
+
 ## API Endpoints
 
 ### Auth
@@ -174,6 +177,8 @@ Do the setup steps above first (at least the properties file) and make sure Dock
 - [x] Shared Account/roles model (a person can be both a user and a professional)
 - [x] Flyway migrations (versioned schema, Hibernate only validates it)
 - [x] Dockerfile and the full stack (app + database) with Docker Compose
+- [x] Test coverage report with JaCoCo
+- [ ] More tests for the remaining gaps (appointment status transitions, exception handlers)
 - [x] Testcontainers: the Spring context test runs against a throwaway MySQL container
 - [x] Concurrency test for the double-booking lock, run against a real MySQL container (Testcontainers)
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
