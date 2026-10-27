@@ -37,7 +37,7 @@ public class AppointmentController {
     public ResponseEntity<List<AppointmentResponseDTO>> getUserAppointments() {
         return ResponseEntity.ok(appointmentService.getMyAppointments());
     }
-    @GetMapping("/mineProf")
+    @GetMapping("/mine/professional")
     public ResponseEntity<List<AppointmentResponseDTO>> getAppointmentsOfProfessionals() {
         return ResponseEntity.ok(appointmentService.getAppointmentOfProfessionals());
     }

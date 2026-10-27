@@ -161,7 +161,7 @@ Do the setup steps above first (at least the properties file) and make sure Dock
 | GET | /api/appointments | Get all appointments (ADMIN only) |
 | GET | /api/appointments/{id} | Get appointment by ID |
 | GET | /api/appointments/mine | Get the logged-in user's own appointments |
-| GET | /api/appointments/mineProf | Get appointments booked with the logged-in professional |
+| GET | /api/appointments/mine/professional | Get appointments booked with the logged-in professional |
 | POST | /api/appointments | Create appointment (the client is the logged-in user; it starts as `PENDING`) |
 | PATCH | /api/appointments/{id} | Update appointment status (either side can cancel, only the professional can confirm) |
 | DELETE | /api/appointments/{id} | Delete appointment (ADMIN only; clients and professionals cancel via PATCH) |

@@ -109,7 +109,7 @@ public class AppointmentControllerTest {
     void getAppointmentOfProfessionals_authenticatedUser_returns200() throws Exception {
         List<AppointmentResponseDTO> appointmentResponseDTOList = List.of(appointmentResponse());
         when(appointmentService.getAppointmentOfProfessionals()).thenReturn(appointmentResponseDTOList);
-        mockMvc.perform(get("/api/appointments/mineProf")
+        mockMvc.perform(get("/api/appointments/mine/professional")
                         .with(user("user").roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(2L))
@@ -121,7 +121,7 @@ public class AppointmentControllerTest {
 
     @Test
     void getAppointmentOfProfessionals_anonymous_returns401() throws Exception {
-        mockMvc.perform(get("/api/appointments/mineProf"))
+        mockMvc.perform(get("/api/appointments/mine/professional"))
                 .andExpect(status().isUnauthorized());
         verify(appointmentService, never()).getAppointmentOfProfessionals();
     }

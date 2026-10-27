@@ -62,7 +62,7 @@
     async function loadAppointments() {
         listEl.innerHTML = "";
         try {
-            const appointments = await apiFetch("/api/appointments/mineProf");
+            const appointments = await apiFetch("/api/appointments/mine/professional");
 
             if (!appointments.length) {
                 emptyEl.style.display = "block";
