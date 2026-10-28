@@ -9,6 +9,7 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![OpenAPI](https://img.shields.io/badge/OpenAPI-Swagger-85EA2D?logo=swagger&logoColor=black)
+[![Architecture diagram](https://gitdiagram.com/diagram-badge.svg)](https://gitdiagram.com/rong-arg/appointment-system?utm_source=readme&utm_medium=badge)
 
 A REST API for scheduling appointments between clients and professionals.
 Built as a personal project to practice Java and Spring Boot while preparing
@@ -33,6 +34,74 @@ for my first job as a backend developer :)
 - Business rules: a user or professional can't be deleted while they still have appointments; a professional's time slot can't be double-booked, and appointments can't be made with an unavailable professional or with oneself
 - Validation and error handling that return clear JSON messages
 - Swagger documentation and a test suite with JUnit 5 and Mockito
+
+## Architecture
+
+How a request travels through the application:
+
+```mermaid
+flowchart TD
+    Client["Client<br/>(test frontend, Swagger UI, any HTTP client)"]
+    subgraph App["Spring Boot application"]
+        Security["Security filter chain<br/>JwtAuthFilter + SecurityConfig"]
+        Controllers["Controllers<br/>Auth, User, Professional, Appointment"]
+        Services["Services<br/>business rules and ownership checks"]
+        Repos["Spring Data JPA repositories"]
+        Errors["GlobalExceptionHandler<br/>clean JSON errors"]
+    end
+    DB[("MySQL 8<br/>schema versioned with Flyway")]
+
+    Client -->|"HTTP + JWT"| Security --> Controllers --> Services --> Repos --> DB
+    Services -.->|"exceptions"| Errors
+```
+
+Data model (the schema is created by the Flyway migrations in `src/main/resources/db/migration`):
+
+```mermaid
+erDiagram
+    ACCOUNTS ||--o| USER : "has profile"
+    ACCOUNTS ||--o| PROFESSIONAL : "has profile"
+    ACCOUNTS ||--o{ ACCOUNT_ROLES : "has"
+    USER ||--o{ APPOINTMENT : "books"
+    PROFESSIONAL ||--o{ APPOINTMENT : "receives"
+
+    ACCOUNTS {
+        bigint id PK
+        varchar email UK
+        varchar password
+    }
+    ACCOUNT_ROLES {
+        bigint account_id FK
+        enum role "ADMIN, PROFESSIONAL, USER"
+    }
+    USER {
+        bigint id PK
+        bigint account_id FK, UK
+        varchar first_name
+        varchar last_name
+        varchar phone
+    }
+    PROFESSIONAL {
+        bigint id PK
+        bigint account_id FK, UK
+        varchar first_name
+        varchar last_name
+        varchar phone
+        varchar specialty
+        int years_of_experience
+        bit available
+    }
+    APPOINTMENT {
+        bigint id PK
+        bigint user_id FK
+        bigint professional_id FK
+        datetime date_time
+        enum status "PENDING, CONFIRMED, CANCELLED"
+        datetime active_slot "generated, unique with professional_id"
+    }
+```
+
+An account holds the credentials and roles, and the user and professional profiles hang from it, which is how one person can be both a client and a professional. `active_slot` is a generated column that is `NULL` for cancelled appointments: its unique index together with `professional_id` is what makes double booking impossible at the database level.
 
 ## Design decisions
 
