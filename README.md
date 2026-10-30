@@ -1,7 +1,7 @@
 # Appointment System API
 
 [![CI](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-170%2B%20passing-success)
+![Tests](https://img.shields.io/badge/Tests-200%2B%20passing-success)
 ![Last commit](https://img.shields.io/github/last-commit/Rong-ARG/appointment-system)
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)
@@ -17,7 +17,7 @@ for my first job as a backend developer :)
 
 ## Key results
 
-- **170+ automated tests** (JUnit 5, Mockito, MockMvc and Testcontainers), with CI on GitHub Actions
+- **200+ automated tests** (JUnit 5, Mockito, MockMvc and Testcontainers), with CI on GitHub Actions
 - **93% instruction coverage and 87% branch coverage**, measured with JaCoCo
 - **19 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
 - **25 REST endpoints** across auth, users, professionals and appointments
@@ -41,18 +41,18 @@ How a request travels through the application:
 
 ```mermaid
 flowchart TD
-    Client["Client<br/>(test frontend, Swagger UI, any HTTP client)"]
-    subgraph App["Spring Boot application"]
-        Security["Security filter chain<br/>JwtAuthFilter + SecurityConfig"]
-        Controllers["Controllers<br/>Auth, User, Professional, Appointment"]
-        Services["Services<br/>business rules and ownership checks"]
-        Repos["Spring Data JPA repositories"]
-        Errors["GlobalExceptionHandler<br/>clean JSON errors"]
-    end
-    DB[("MySQL 8<br/>schema versioned with Flyway")]
+   Client["Client<br/>(test frontend, Swagger UI, any HTTP client)"]
+   subgraph App["Spring Boot application"]
+      Security["Security filter chain<br/>JwtAuthFilter + SecurityConfig"]
+      Controllers["Controllers<br/>Auth, User, Professional, Appointment"]
+      Services["Services<br/>business rules and ownership checks"]
+      Repos["Spring Data JPA repositories"]
+      Errors["GlobalExceptionHandler<br/>clean JSON errors"]
+   end
+   DB[("MySQL 8<br/>schema versioned with Flyway")]
 
-    Client -->|"HTTP + JWT"| Security --> Controllers --> Services --> Repos --> DB
-    Services -.->|"exceptions"| Errors
+   Client -->|"HTTP + JWT"| Security --> Controllers --> Services --> Repos --> DB
+   Services -.->|"exceptions"| Errors
 ```
 
 Data model (the schema is created by the Flyway migrations in `src/main/resources/db/migration`):
@@ -189,7 +189,24 @@ This is what the test frontend looks like once you log in:
 
 Do the setup steps above first (at least the properties file) and make sure Docker is running: the integration tests (`AppointmentSystemApplicationTests` and the concurrency test in `integration/`) run against a temporary MySQL container started by Testcontainers, so you don't need `docker compose up` for the tests. The rest of the tests use mocks.
 
-After the tests, a JaCoCo coverage report is generated at `target/site/jacoco/index.html`.
+The suite is split in three layers:
+
+| Layer | What it covers | Tools |
+|-------|----------------|-------|
+| Unit | Services, JWT, exception handler, validators (business rules and edge cases) | JUnit 5, Mockito |
+| Web | Controllers with the real security rules: status codes, validation, roles | `@WebMvcTest`, MockMvc, spring-security-test |
+| Integration | Flyway migrations on a real MySQL, double-booking under 5 concurrent threads | Testcontainers |
+
+Useful variations:
+
+```
+./mvnw test -Dtest=AppointmentServiceImplTest
+./mvnw test -Dtest=AppointmentServiceImplTest#patchAppointment*
+```
+
+### Coverage report
+
+After the tests, JaCoCo generates a coverage report. Open `target/site/jacoco/index.html` in your browser (for example `xdg-open target/site/jacoco/index.html` on Linux or `open target/site/jacoco/index.html` on macOS) to see line and branch coverage per package and class.
 
 ## API Endpoints
 
@@ -247,13 +264,13 @@ After the tests, a JaCoCo coverage report is generated at `target/site/jacoco/in
 - [x] Flyway migrations (versioned schema, Hibernate only validates it)
 - [x] Dockerfile and the full stack (app + database) with Docker Compose
 - [x] Test coverage report with JaCoCo
-- [ ] More tests for the remaining gaps (appointment status transitions, exception handlers)
+- [x] More tests for the remaining gaps (appointment status transitions, exception handlers)
 - [x] Testcontainers: the Spring context test runs against a throwaway MySQL container
 - [x] Concurrency test for the double-booking lock, run against a real MySQL container (Testcontainers)
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
 - [x] Unit testing — AuthService / JwtService fully covered (6 tests)
 - [x] Unit testing — CurrentUserService
-- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (170+ tests in total across the project)
+- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (200+ tests in total across the project)
 
 ## Bugs and security fixes
 
