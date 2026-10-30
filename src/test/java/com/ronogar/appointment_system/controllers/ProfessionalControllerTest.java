@@ -156,8 +156,8 @@ public class ProfessionalControllerTest {
         String json = objectMapper.writeValueAsString(professionalRequest());
 
         mockMvc.perform(post("/api/professionals")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isUnauthorized());
         verify(professionalService, never()).createProfessional(any(ProfessionalRequestDTO.class));
     }
@@ -184,9 +184,9 @@ public class ProfessionalControllerTest {
         String json = objectMapper.writeValueAsString(professionalRequest());
 
         mockMvc.perform(post("/api/professionals")
-                .with(user("user").roles("USER"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .with(user("user").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isForbidden());
         verify(professionalService, never()).createProfessional(any(ProfessionalRequestDTO.class));
     }
@@ -268,9 +268,9 @@ public class ProfessionalControllerTest {
                 .when(professionalService).updateProfessional(eq(id), any(ProfessionalRequestDTO.class));
 
         mockMvc.perform(put("/api/professionals/{id}", id)
-                .with(user("user").roles("USER"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .with(user("user").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isNotFound());
 
         verify(professionalService).updateProfessional(eq(id), any(ProfessionalRequestDTO.class));
@@ -299,11 +299,61 @@ public class ProfessionalControllerTest {
                 .when(professionalService).patchProfessional(eq(id), any(ProfessionalPatchDTO.class));
 
         mockMvc.perform(patch("/api/professionals/{id}", id)
-                .with(user("user").roles("USER"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(json))
+                        .with(user("user").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                 .andExpect(status().isNotFound());
 
         verify(professionalService).patchProfessional(eq(id), any(ProfessionalPatchDTO.class));
+    }
+
+    @Test
+    void getProfessionalById_anonymous_returns401() throws Exception {
+        mockMvc.perform(get("/api/professionals/{id}", 1L))
+                .andExpect(status().isUnauthorized());
+
+        verify(professionalService, never()).getProfessionalById(anyLong());
+    }
+
+    @Test
+    void createOwnProfessionalProfile_anonymous_returns401() throws Exception {
+        String json = objectMapper.writeValueAsString(professionalSelfRequest());
+
+        mockMvc.perform(post("/api/professionals/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updateProfessional_anonymous_returns401() throws Exception {
+        String json = objectMapper.writeValueAsString(professionalRequest());
+
+        mockMvc.perform(put("/api/professionals/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());
+
+        verify(professionalService, never()).updateProfessional(anyLong(), any(ProfessionalRequestDTO.class));
+    }
+
+    @Test
+    void patchProfessional_anonymous_returns401() throws Exception {
+        String json = objectMapper.writeValueAsString(professionalPatch());
+
+        mockMvc.perform(patch("/api/professionals/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isUnauthorized());
+
+        verify(professionalService, never()).patchProfessional(anyLong(), any(ProfessionalPatchDTO.class));
+    }
+
+    @Test
+    void deleteProfessional_anonymous_returns401() throws Exception {
+        mockMvc.perform(delete("/api/professionals/{id}", 1L))
+                .andExpect(status().isUnauthorized());
+
+        verify(professionalService, never()).deleteProfessional(anyLong());
     }
 }

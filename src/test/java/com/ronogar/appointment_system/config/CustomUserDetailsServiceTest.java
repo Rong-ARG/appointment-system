@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -41,7 +42,7 @@ public class CustomUserDetailsServiceTest {
         assertEquals("hashed", result.getPassword());
         assertEquals(Set.of("ROLE_USER", "ROLE_PROFESSIONAL"),
                 result.getAuthorities().stream().map(GrantedAuthority::getAuthority)
-                        .collect(java.util.stream.Collectors.toSet()));
+                        .collect(Collectors.toSet()));
     }
 
     @Test
