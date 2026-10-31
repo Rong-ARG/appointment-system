@@ -6,7 +6,7 @@ spring.datasource.username=admin
 spring.datasource.password=admin
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=true
+spring.jpa.show-sql=false
 
 # demo key just so the project runs out of the box
 # (in a real app this would come from an env variable, not from this file)
@@ -14,4 +14,4 @@ security.jwt.key.private=${JWT_SECRET:change-me-demo-key-use-at-least-32-charact
 security.jwt.user.generator=AUTH0JWT-BACKEND
 security.jwt.expiration.time=1800000
 
-logging.level.org.springframework.security=DEBUG
+logging.level.org.springframework.security=WARN
