@@ -25,7 +25,7 @@ for my first job as a backend developer :)
 
 ## Features
 
-- JWT authentication with Spring Security and two roles (USER and ADMIN)
+- JWT authentication with Spring Security and three roles (USER, PROFESSIONAL and ADMIN)
 - One account can be both a client and a professional
 - Clients can search professionals by specialty or last name, book appointments and cancel them
 - Professionals can confirm or cancel the appointments booked with them
