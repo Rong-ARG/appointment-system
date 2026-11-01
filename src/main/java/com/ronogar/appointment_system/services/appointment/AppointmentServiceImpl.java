@@ -34,14 +34,10 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
 
-    private Appointment toEntity(AppointmentRequestDTO dto) {
+    private Appointment toEntity(AppointmentRequestDTO dto, Professional professional) {
         Appointment appointment = new Appointment();
         appointment.setDateTime(dto.getDateTime());
         appointment.setStatus(AppointmentStatus.PENDING);
-
-        Professional professional = professionalRepository.findByIdForUpdate(dto.getProfessionalId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Professional with id " + dto.getProfessionalId() + " not found"));
 
         appointment.setUser(currentUserService.getAuthenticatedUser());
         appointment.setProfessional(professional);
@@ -112,25 +108,30 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponseDTO createAppointment(AppointmentRequestDTO appointmentRequestDTO) {
-        Appointment newAppointment = (toEntity(appointmentRequestDTO));
+        // Locks the professional row until commit: serializes concurrent bookings
+        Professional professional = professionalRepository.findByIdForUpdate(appointmentRequestDTO.getProfessionalId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Professional with id " + appointmentRequestDTO.getProfessionalId() + " not found"));
 
-        if (Boolean.FALSE.equals(newAppointment.getProfessional().getAvailable())){
+        Appointment newAppointment = toEntity(appointmentRequestDTO, professional);
+
+        if (Boolean.FALSE.equals(professional.getAvailable())) {
             throw new InvalidAppointmentStateException("The Professional is not available");
         }
 
         Long clientAccountId = newAppointment.getUser().getAccount().getId();
-        Long professionalAccountId = newAppointment.getProfessional().getAccount().getId();
+        Long professionalAccountId = professional.getAccount().getId();
 
         if (clientAccountId.equals(professionalAccountId)) {
             throw new InvalidAppointmentStateException("You cannot book an appointment with yourself");
         }
 
         boolean slotTaken = appointmentRepository.existsByProfessionalIdAndDateTimeAndStatusIn(
-                newAppointment.getProfessional().getId(),
+                professional.getId(),
                 newAppointment.getDateTime(),
                 List.of(AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED));
 
-        if(slotTaken){
+        if (slotTaken) {
             throw new DuplicateResourceException("The professional already has an appointment at that time");
         }
 
