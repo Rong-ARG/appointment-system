@@ -59,46 +59,46 @@ Data model (the schema is created by the Flyway migrations in `src/main/resource
 
 ```mermaid
 erDiagram
-    ACCOUNTS ||--o| USER : "has profile"
-    ACCOUNTS ||--o| PROFESSIONAL : "has profile"
-    ACCOUNTS ||--o{ ACCOUNT_ROLES : "has"
-    USER ||--o{ APPOINTMENT : "books"
-    PROFESSIONAL ||--o{ APPOINTMENT : "receives"
+   ACCOUNTS ||--o| USER : "has profile"
+   ACCOUNTS ||--o| PROFESSIONAL : "has profile"
+   ACCOUNTS ||--o{ ACCOUNT_ROLES : "has"
+   USER ||--o{ APPOINTMENT : "books"
+   PROFESSIONAL ||--o{ APPOINTMENT : "receives"
 
-    ACCOUNTS {
-        bigint id PK
-        varchar email UK
-        varchar password
-    }
-    ACCOUNT_ROLES {
-        bigint account_id FK
-        enum role "ADMIN, PROFESSIONAL, USER"
-    }
-    USER {
-        bigint id PK
-        bigint account_id FK, UK
-        varchar first_name
-        varchar last_name
-        varchar phone
-    }
-    PROFESSIONAL {
-        bigint id PK
-        bigint account_id FK, UK
-        varchar first_name
-        varchar last_name
-        varchar phone
-        varchar specialty
-        int years_of_experience
-        bit available
-    }
-    APPOINTMENT {
-        bigint id PK
-        bigint user_id FK
-        bigint professional_id FK
-        datetime date_time
-        enum status "PENDING, CONFIRMED, CANCELLED"
-        datetime active_slot "generated, unique with professional_id"
-    }
+   ACCOUNTS {
+      bigint id PK
+      varchar email UK
+      varchar password
+   }
+   ACCOUNT_ROLES {
+      bigint account_id FK
+      enum role "ADMIN, PROFESSIONAL, USER"
+   }
+   USER {
+      bigint id PK
+      bigint account_id FK, UK
+      varchar first_name
+      varchar last_name
+      varchar phone
+   }
+   PROFESSIONAL {
+      bigint id PK
+      bigint account_id FK, UK
+      varchar first_name
+      varchar last_name
+      varchar phone
+      varchar specialty
+      int years_of_experience
+      bit available
+   }
+   APPOINTMENT {
+      bigint id PK
+      bigint user_id FK
+      bigint professional_id FK
+      datetime date_time
+      enum status "PENDING, CONFIRMED, CANCELLED"
+      datetime active_slot "generated, unique with professional_id"
+   }
 ```
 
 An account holds the credentials and roles, and the user and professional profiles hang from it, which is how one person can be both a client and a professional. `active_slot` is a generated column that is `NULL` for cancelled appointments: its unique index together with `professional_id` is what makes double booking impossible at the database level.
@@ -131,7 +131,7 @@ An account holds the credentials and roles, and the user and professional profil
 ## Notes
 
 - `application.properties` is not committed (it's in `.gitignore`), use `application.properties.example` as a starting point
-- The JWT key is read from the `JWT_SECRET` environment variable (Docker Compose takes it from your `.env` file). The example properties file only has a demo fallback so the project runs out of the box: use your own value anywhere real.
+- The JWT key is read from the `JWT_SECRET` environment variable (Docker Compose takes it from your `.env` file). `JWT_SECRET` is required (minimum 32 characters): the app will not start without it.
 
 ## API Documentation
 
@@ -153,7 +153,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Then open http://localhost:8080/login.html or the Swagger UI. The `.env` file holds the `JWT_SECRET` used to sign tokens: put your own value there (for example the output of `openssl rand -hex 32`). The app waits for MySQL to be healthy and Flyway creates the schema on the first run.
+Then open http://localhost:8080/login.html or the Swagger UI. The `.env` file holds the `JWT_SECRET` used to sign tokens: you must set your own value there (minimum 32 characters, for example the output of `openssl rand -hex 32`). The app waits for MySQL to be healthy and Flyway creates the schema on the first run.
 
 ### Run from source (development)
 
@@ -166,16 +166,20 @@ Then open http://localhost:8080/login.html or the Swagger UI. The `.env` file ho
    ```
    cp src/main/resources/application.properties.example src/main/resources/application.properties
    ```
-3. Start only the database (the first time, give MySQL about 20 seconds to initialise)
+3. Set the JWT secret (minimum 32 characters)
+   ```
+   export JWT_SECRET=$(openssl rand -hex 32)
+   ```
+4. Start only the database (the first time, give MySQL about 20 seconds to initialise)
    ```
    docker compose up -d mysql
    ```
-4. Run the application
+5. Run the application
    ```
    ./mvnw spring-boot:run
    ```
-5. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
-6. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow. There's also a `profile.html` page to edit your info or delete your account, and a `professional-appointments.html` page for professionals to confirm/cancel appointments booked with them.
+6. Access Swagger UI at http://localhost:8080/swagger-ui/index.html
+7. A small test frontend (plain HTML/CSS/JS) is included under `src/main/resources/static`. Once the app is running, open http://localhost:8080/login.html to try the full login flow. There's also a `profile.html` page to edit your info or delete your account, and a `professional-appointments.html` page for professionals to confirm/cancel appointments booked with them.
 
 This is what the test frontend looks like once you log in:
 
