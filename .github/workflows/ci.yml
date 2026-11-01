@@ -22,6 +22,8 @@ jobs:
         run: cp src/main/resources/application.properties.example src/main/resources/application.properties
 
       - name: Run tests
+        env:
+          JWT_SECRET: ci-test-secret-key-at-least-32-characters-long
         run: |
           chmod +x mvnw
           ./mvnw test
