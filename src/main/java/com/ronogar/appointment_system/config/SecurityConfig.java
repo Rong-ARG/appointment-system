@@ -51,6 +51,7 @@ public class SecurityConfig {
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/users/email/**", "/api/users/lastname/**").hasRole("ADMIN");
                     authorizeRequests.requestMatchers(HttpMethod.GET, "/api/appointments").hasRole("ADMIN");
                     authorizeRequests.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();
+                    authorizeRequests.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll();
 
                     authorizeRequests.anyRequest().authenticated();
                 }).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
