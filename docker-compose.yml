@@ -10,7 +10,7 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot" ]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -28,3 +28,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in a .env file, see .env.example}
     ports:
       - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
