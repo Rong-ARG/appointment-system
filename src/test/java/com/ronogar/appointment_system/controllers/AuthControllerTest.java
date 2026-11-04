@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ronogar.appointment_system.config.CustomUserDetailsService;
 import com.ronogar.appointment_system.dtos.auth.AuthRequestDTO;
 import com.ronogar.appointment_system.dtos.auth.AuthResponseDTO;
+import com.ronogar.appointment_system.exceptions.TooManyRequestsException;
 import com.ronogar.appointment_system.services.auth.AuthService;
 import com.ronogar.appointment_system.services.auth.JwtService;
+import com.ronogar.appointment_system.services.auth.LoginRateLimiter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -22,6 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static org.mockito.ArgumentMatchers.anyString;
+
 @WebMvcTest(AuthController.class)
 public class AuthControllerTest {
 
@@ -33,6 +37,9 @@ public class AuthControllerTest {
 
     @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
+
+    @MockitoBean
+    private LoginRateLimiter loginRateLimiter;
 
     @Autowired
     private MockMvc mockMvc;
@@ -78,6 +85,23 @@ public class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+
+        verify(authService, never()).login(any(AuthRequestDTO.class));
+    }
+
+    @Test
+    void login_tooManyAttempts_returns429() throws Exception {
+
+        String jsonBody = objectMapper.writeValueAsString(authRequest());
+
+        doThrow(new TooManyRequestsException("Too many login attempts. Try again in a minute"))
+                .when(loginRateLimiter).checkAllowed(anyString());
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.message").value("Too many login attempts. Try again in a minute"));
 
         verify(authService, never()).login(any(AuthRequestDTO.class));
     }

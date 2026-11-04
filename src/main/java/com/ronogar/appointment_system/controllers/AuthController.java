@@ -3,10 +3,12 @@ package com.ronogar.appointment_system.controllers;
 import com.ronogar.appointment_system.dtos.auth.AuthRequestDTO;
 import com.ronogar.appointment_system.dtos.auth.AuthResponseDTO;
 import com.ronogar.appointment_system.services.auth.AuthService;
+import com.ronogar.appointment_system.services.auth.LoginRateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +24,20 @@ public class AuthController {
 
     private final AuthService authService;
 
+    private final LoginRateLimiter loginRateLimiter;
+
     @Operation(summary = "Log in", description = "Authenticates with email and password and returns a JWT")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login successful, token returned"),
             @ApiResponse(responseCode = "400", description = "Invalid request body"),
-            @ApiResponse(responseCode = "401", description = "Bad credentials")
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "429", description = "Too many login attempts")
     })
     @PostMapping
-    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO authRequestDTO){
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO authRequestDTO,
+                                                 HttpServletRequest request){
+
+        loginRateLimiter.checkAllowed(request.getRemoteAddr());
 
         AuthResponseDTO authResponseDTO = authService.login(authRequestDTO);
 
