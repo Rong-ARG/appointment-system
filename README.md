@@ -26,6 +26,8 @@ for my first job as a backend developer :)
 ## Features
 
 - JWT authentication with Spring Security and three roles (USER, PROFESSIONAL and ADMIN)
+- Login rate limiting: 5 attempts per minute per IP, answered with `429 Too Many Requests` (in-memory)
+- Health endpoint at `/actuator/health` (public) and a Docker healthcheck for the app container
 - One account can be both a client and a professional
 - Clients can search professionals by specialty or last name, book appointments and cancel them
 - Professionals can confirm or cancel the appointments booked with them
@@ -59,46 +61,46 @@ Data model (the schema is created by the Flyway migrations in `src/main/resource
 
 ```mermaid
 erDiagram
-   ACCOUNTS ||--o| USER : "has profile"
-   ACCOUNTS ||--o| PROFESSIONAL : "has profile"
-   ACCOUNTS ||--o{ ACCOUNT_ROLES : "has"
-   USER ||--o{ APPOINTMENT : "books"
-   PROFESSIONAL ||--o{ APPOINTMENT : "receives"
+    ACCOUNTS ||--o| USER : "has profile"
+    ACCOUNTS ||--o| PROFESSIONAL : "has profile"
+    ACCOUNTS ||--o{ ACCOUNT_ROLES : "has"
+    USER ||--o{ APPOINTMENT : "books"
+    PROFESSIONAL ||--o{ APPOINTMENT : "receives"
 
-   ACCOUNTS {
-      bigint id PK
-      varchar email UK
-      varchar password
-   }
-   ACCOUNT_ROLES {
-      bigint account_id FK
-      enum role "ADMIN, PROFESSIONAL, USER"
-   }
-   USER {
-      bigint id PK
-      bigint account_id FK, UK
-      varchar first_name
-      varchar last_name
-      varchar phone
-   }
-   PROFESSIONAL {
-      bigint id PK
-      bigint account_id FK, UK
-      varchar first_name
-      varchar last_name
-      varchar phone
-      varchar specialty
-      int years_of_experience
-      bit available
-   }
-   APPOINTMENT {
-      bigint id PK
-      bigint user_id FK
-      bigint professional_id FK
-      datetime date_time
-      enum status "PENDING, CONFIRMED, CANCELLED"
-      datetime active_slot "generated, unique with professional_id"
-   }
+    ACCOUNTS {
+        bigint id PK
+        varchar email UK
+        varchar password
+    }
+    ACCOUNT_ROLES {
+        bigint account_id FK
+        enum role "ADMIN, PROFESSIONAL, USER"
+    }
+    USER {
+        bigint id PK
+        bigint account_id FK, UK
+        varchar first_name
+        varchar last_name
+        varchar phone
+    }
+    PROFESSIONAL {
+        bigint id PK
+        bigint account_id FK, UK
+        varchar first_name
+        varchar last_name
+        varchar phone
+        varchar specialty
+        int years_of_experience
+        bit available
+    }
+    APPOINTMENT {
+        bigint id PK
+        bigint user_id FK
+        bigint professional_id FK
+        datetime date_time
+        enum status "PENDING, CONFIRMED, CANCELLED"
+        datetime active_slot "generated, unique with professional_id"
+    }
 ```
 
 An account holds the credentials and roles, and the user and professional profiles hang from it, which is how one person can be both a client and a professional. `active_slot` is a generated column that is `NULL` for cancelled appointments: its unique index together with `professional_id` is what makes double booking impossible at the database level.
@@ -115,6 +117,7 @@ An account holds the credentials and roles, and the user and professional profil
 - **The database schema is versioned with Flyway:** migrations live in `src/main/resources/db/migration`, Hibernate only validates the schema (`ddl-auto=validate`) and the integration tests apply every migration to an empty MySQL container
 - **Double booking is prevented twice:** by a pessimistic lock in the service and by a unique index in the database (`professional_id` plus a generated `active_slot` column that is `NULL` for cancelled appointments, so a cancelled appointment still frees its slot)
 - **One place for the email-uniqueness rule:** `AccountEmailValidator` is shared by sign-up and by the user and professional updates
+- **Login rate limiting without extra libraries:** a small in-memory counter per IP (5 attempts per minute) runs before the authentication, so blocked attempts never reach the database or BCrypt. It is per instance and resets on restart: with several instances or a proxy in front, it would move to a shared store such as Redis and read the client IP from `X-Forwarded-For`
 
 ## Technologies
 
@@ -218,7 +221,8 @@ After the tests, JaCoCo generates a coverage report. Open `target/site/jacoco/in
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /auth/login | Log in with email and password, returns a JWT |
+| POST | /auth/login | Log in with email and password, returns a JWT (rate limited: `429` after 5 attempts per minute per IP) |
+| GET | /actuator/health | Health check, public |
 
 ### Users
 
@@ -275,6 +279,8 @@ After the tests, JaCoCo generates a coverage report. Open `target/site/jacoco/in
 - [x] Unit testing — AuthService / JwtService fully covered (6 tests)
 - [x] Unit testing — CurrentUserService
 - [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (200+ tests in total across the project)
+- [x] Rate limiting on the login endpoint
+- [x] Actuator health endpoint and Docker healthcheck
 
 ## Bugs and security fixes
 
