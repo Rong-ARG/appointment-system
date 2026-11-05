@@ -2,6 +2,7 @@ package com.ronogar.appointment_system.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -104,6 +105,13 @@ public class GlobalExceptionHandler {
         log.warn("Data integrity violation: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("message", "The request conflicts with existing data"));
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, String>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+        log.warn("Optimistic locking failure: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", "The resource was modified by someone else. Reload and try again"));
     }
 
     @ExceptionHandler(Exception.class)
