@@ -54,7 +54,7 @@ public class UserControllerTest {
     void createUser_validRequest_returns201() throws Exception {
 
         UserResponseDTO responseDTO = userResponse();
-        String email= responseDTO.getEmail();
+        String email = responseDTO.getEmail();
 
         String json = objectMapper.writeValueAsString(userRequest());
 
@@ -143,7 +143,8 @@ public class UserControllerTest {
     void getAllUsers_asUser_returns403() throws Exception {
 
         mockMvc.perform(get("/api/users").with(user("testUser").roles("USER")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Access denied"));
     }
 
     @Test
@@ -193,7 +194,8 @@ public class UserControllerTest {
     void getCurrentUser_anonymous_returns401() throws Exception {
 
         mockMvc.perform(get("/api/users/me"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Unauthorized"));
 
         verify(userService, never()).getCurrentUser();
     }
