@@ -44,7 +44,7 @@ public class ProfessionalRequestDTO {
     private Boolean available;
 
     @Schema(description = "Password of the professional", example = "Wilsooooon123")
-    @Size(min = 8 , message = "password too short")
+    @Size(min = 8, max = 72, message = "password must be between 8 and 72 characters")
     @NotBlank
     private String password;
 }

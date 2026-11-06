@@ -66,4 +66,25 @@ public class JwtServiceTest {
 
         assertThrows(TokenInvalidException.class, () -> jwtService.validateToken(tokenWithDifferentIssuer));
     }
+
+    @Test
+    void validateKey_shortKey_throwsIllegalState() {
+        ReflectionTestUtils.setField(jwtService, "privateKey", "too-short");
+
+        assertThrows(IllegalStateException.class, () -> jwtService.validateKey());
+    }
+
+    @Test
+    void validateKey_nullKey_throwsIllegalState() {
+        ReflectionTestUtils.setField(jwtService, "privateKey", null);
+
+        assertThrows(IllegalStateException.class, () -> jwtService.validateKey());
+    }
+
+    @Test
+    void validateKey_longEnoughKey_doesNotThrow() {
+        ReflectionTestUtils.setField(jwtService, "privateKey", "a".repeat(32));
+
+        assertDoesNotThrow(() -> jwtService.validateKey());
+    }
 }

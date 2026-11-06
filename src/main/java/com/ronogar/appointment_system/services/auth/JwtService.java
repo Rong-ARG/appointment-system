@@ -4,12 +4,15 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ronogar.appointment_system.exceptions.TokenInvalidException;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import java.util.Date;
 @Component
 public class JwtService {
+
+    static final int MIN_KEY_LENGTH = 32;
 
     @Value("${security.jwt.key.private}")
     private String privateKey;
@@ -19,6 +22,15 @@ public class JwtService {
 
     @Value("${security.jwt.expiration.time}")
     private long expirationTime;
+
+    @PostConstruct
+    public void validateKey() {
+        if (privateKey == null || privateKey.length() < MIN_KEY_LENGTH) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be at least " + MIN_KEY_LENGTH + " characters long. "
+                            + "Generate one with: openssl rand -hex 32");
+        }
+    }
 
     public String createToken(Authentication authentication) {
         Algorithm algorithm = Algorithm.HMAC256(this.privateKey);

@@ -23,7 +23,7 @@ public class UserRequestDTO {
     private String lastName;
 
     @Schema(description = "Password of the user", example = "Password123wow")//wow
-    @Size(min = 8, message = "password too short")
+    @Size(min = 8, max = 72, message = "password must be between 8 and 72 characters")
     @NotBlank
     private String password;
 
