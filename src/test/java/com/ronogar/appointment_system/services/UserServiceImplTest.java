@@ -104,6 +104,7 @@ public class UserServiceImplTest {
 
         Account authAccount = new Account();
         authAccount.setId(2L);
+        authAccount.setRoles(Set.of(Role.USER));
         when(currentUserService.getAuthenticatedAccount()).thenReturn(authAccount);
 
 
@@ -134,7 +135,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void getUserById_returnsUser_WhenIsAdminViewOtherProfile() {
+    public void getUserById_returnsUser_WhenIsAdminWithoutOwnProfile() {
         Account targetAccount = new Account();
         targetAccount.setEmail("Marcos@gmail.com");
 
@@ -143,19 +144,16 @@ public class UserServiceImplTest {
         user.setFirstName("Juan");
         user.setAccount(targetAccount);
 
-        User userdata = new User();
-        userdata.setId(2L);
-
         Account account = new Account();
         account.setRoles(Set.of(Role.ADMIN));
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(currentUserService.getAuthenticatedUser()).thenReturn(userdata);
         when(currentUserService.getAuthenticatedAccount()).thenReturn(account);
 
         UserResponseDTO result = userService.getUserById(1L);
         assertNotNull(result);
         assertEquals("Juan", result.getFirstName());
+        verify(currentUserService, never()).getAuthenticatedUser();
 
     }
 
