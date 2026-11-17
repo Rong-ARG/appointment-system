@@ -25,7 +25,7 @@ public class User {
     @JoinColumn(name = "account_id", nullable = false,unique = true)
     private Account account;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Appointment> appointments;
 
 }
