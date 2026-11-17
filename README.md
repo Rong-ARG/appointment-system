@@ -1,7 +1,7 @@
 # Appointment System API
 
 [![CI](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Rong-ARG/appointment-system/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/Tests-200%2B%20passing-success)
+![Tests](https://img.shields.io/badge/Tests-210%2B%20passing-success)
 ![Last commit](https://img.shields.io/github/last-commit/Rong-ARG/appointment-system)
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)
@@ -17,11 +17,12 @@ for my first job as a backend developer :)
 
 ## Key results
 
-- **200+ automated tests** (JUnit 5, Mockito, MockMvc and Testcontainers), with CI on GitHub Actions
+- **210+ automated tests** (JUnit 5, Mockito, MockMvc and Testcontainers), with CI on GitHub Actions
 - **93% instruction coverage and 87% branch coverage**, measured with JaCoCo
-- **19 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
+- **24 bugs and security issues** found and fixed during development ([see the list](#bugs-and-security-fixes))
 - **25 REST endpoints** across auth, users, professionals and appointments
 - **JWT authentication** with ownership checks, so users can only access their own data
+- **Concurrency-safe bookings and status changes:** double booking and lost updates are covered by integration tests against a real MySQL
 
 ## Features
 
@@ -34,7 +35,8 @@ for my first job as a backend developer :)
 - Appointments are cancelled, not deleted: both sides keep the history, and physical deletion is ADMIN-only
 - Ownership checks: you can only see or modify appointments you're involved in
 - Business rules: a user or professional can't be deleted while they still have appointments; a professional's time slot can't be double-booked, and appointments can't be made with an unavailable professional or with oneself
-- Validation and error handling that return clear JSON messages
+- Concurrent status changes are detected with optimistic locking, so a cancellation can never be silently overwritten
+- Validation and error handling that return clear JSON messages, including the `401` and `403` answered by the security filter chain
 - Swagger documentation and a test suite with JUnit 5 and Mockito
 
 ## Architecture
@@ -99,6 +101,7 @@ erDiagram
         bigint professional_id FK
         datetime date_time
         enum status "PENDING, CONFIRMED, CANCELLED"
+        bigint version "optimistic locking"
         datetime active_slot "generated, unique with professional_id"
     }
 ```
@@ -116,6 +119,9 @@ An account holds the credentials and roles, and the user and professional profil
 - **An empty search is not an error:** `GET /api/professionals?specialty=...&lastName=...` returns `200` with an empty list when nothing matches; `404` is reserved for resources that don't exist
 - **The database schema is versioned with Flyway:** migrations live in `src/main/resources/db/migration`, Hibernate only validates the schema (`ddl-auto=validate`) and the integration tests apply every migration to an empty MySQL container
 - **Double booking is prevented twice:** by a pessimistic lock in the service and by a unique index in the database (`professional_id` plus a generated `active_slot` column that is `NULL` for cancelled appointments, so a cancelled appointment still frees its slot)
+- **Concurrent status changes use optimistic locking:** `Appointment` has a `@Version` column, so if the professional confirms while the client cancels, one of the two requests fails with `409` instead of the last write winning
+- **Business timezone:** appointments are stored as `LocalDateTime` (no zone), so the JVM default timezone is set at startup (`America/Argentina/Buenos_Aires`, overridable with `APP_TIMEZONE`) and `@Future` compares against local time instead of the container's UTC
+- **Associations are fetched on purpose:** appointment queries use `@EntityGraph` to load the user, the professional and their accounts in one query, and `spring.jpa.open-in-view` is off, so a lazy-loading mistake fails fast instead of silently running one query per row
 - **One place for the email-uniqueness rule:** `AccountEmailValidator` is shared by sign-up and by the user and professional updates
 - **Login rate limiting without extra libraries:** a small in-memory counter per IP (5 attempts per minute) runs before the authentication, so blocked attempts never reach the database or BCrypt. It is per instance and resets on restart: with several instances or a proxy in front, it would move to a shared store such as Redis and read the client IP from `X-Forwarded-For`
 
@@ -127,7 +133,7 @@ An account holds the credentials and roles, and the user and professional profil
 | Security | ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white) | Spring Security with JWT (auth0 java-jwt 4.6.0): authentication, role-based access and ownership checks |
 | Database | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white) | MySQL 8 accessed through Hibernate (the JPA implementation behind Spring Data JPA), run locally with Docker Compose. The schema is versioned with Flyway migrations and Hibernate only validates it |
 | API documentation | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black) | springdoc-openapi 3.1.1, serving Swagger UI |
-| Testing | ![JUnit5](https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTMuMiAxNy44IDVIMjF2MTRoLTNWMTAuNGwtNiA4LjYtNi04LjZWMTl6Ii8%2BPC9zdmc%2BCg%3D%3D) | JUnit 5 and Mockito for service tests, MockMvc with Spring Security Test for controllers and access rules, Testcontainers (MySQL) for integration tests against a real database, and JaCoCo for the coverage report |
+| Testing | ![JUnit5](https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-78A641?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMgMTlWNWgzLjJMMTIgMTMuMiAxNy44IDVIMjF2MTRoLTNWMTAuNGwtNiA4LjZWMTl6Ii8%2BPC9zdmc%2BCg%3D%3D) | JUnit 5 and Mockito for service tests, MockMvc with Spring Security Test for controllers and access rules, Testcontainers (MySQL) for integration tests against a real database, and JaCoCo for the coverage report |
 | Build and CI | ![Maven](https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-0db7ed?style=for-the-badge&logo=docker&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) | Maven Wrapper for the build, a multi-stage Dockerfile and Docker Compose to run the app together with its database, and GitHub Actions running the tests (the integration tests start their own MySQL container with Testcontainers) |
 | Test frontend | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) | Minimal client (plain HTML, CSS and JavaScript) to exercise the login and appointment flows |
 
@@ -135,6 +141,8 @@ An account holds the credentials and roles, and the user and professional profil
 
 - `application.properties` is not committed (it's in `.gitignore`), use `application.properties.example` as a starting point
 - The JWT key is read from the `JWT_SECRET` environment variable (Docker Compose takes it from your `.env` file). `JWT_SECRET` is required (minimum 32 characters): the app will not start without it.
+- Passwords must be between 8 and 72 characters (72 is BCrypt's limit)
+- The application timezone defaults to `America/Argentina/Buenos_Aires`; set `APP_TIMEZONE` (for example `UTC`) to change it
 
 ## API Documentation
 
@@ -194,15 +202,15 @@ This is what the test frontend looks like once you log in:
 ./mvnw test
 ```
 
-Do the setup steps above first (at least the properties file) and make sure Docker is running: the integration tests (`AppointmentSystemApplicationTests` and the concurrency test in `integration/`) run against a temporary MySQL container started by Testcontainers, so you don't need `docker compose up` for the tests. The rest of the tests use mocks.
+Do the setup steps above first (at least the properties file) and make sure Docker is running: the integration tests (`AppointmentSystemApplicationTests` and the concurrency tests in `integration/`) run against a temporary MySQL container started by Testcontainers, so you don't need `docker compose up` for the tests. The rest of the tests use mocks.
 
 The suite is split in three layers:
 
 | Layer | What it covers | Tools |
 |-------|----------------|-------|
 | Unit | Services, JWT, exception handler, validators (business rules and edge cases) | JUnit 5, Mockito |
-| Web | Controllers with the real security rules: status codes, validation, roles | `@WebMvcTest`, MockMvc, spring-security-test |
-| Integration | Flyway migrations on a real MySQL, double-booking under 5 concurrent threads | Testcontainers |
+| Web | Controllers with the real security rules: status codes, validation, roles, JSON error bodies | `@WebMvcTest`, MockMvc, spring-security-test |
+| Integration | Flyway migrations on a real MySQL, double-booking under 5 concurrent threads, concurrent confirm vs cancel | Testcontainers |
 
 Useful variations:
 
@@ -260,7 +268,7 @@ After the tests, JaCoCo generates a coverage report. Open `target/site/jacoco/in
 | GET | /api/appointments/mine | Get the logged-in user's own appointments |
 | GET | /api/appointments/mine/professional | Get appointments booked with the logged-in professional |
 | POST | /api/appointments | Create appointment (the client is the logged-in user; it starts as `PENDING`) |
-| PATCH | /api/appointments/{id} | Update appointment status (either side can cancel, only the professional can confirm) |
+| PATCH | /api/appointments/{id} | Update appointment status (either side can cancel, only the professional can confirm; `409` on invalid transitions or concurrent changes) |
 | DELETE | /api/appointments/{id} | Delete appointment (ADMIN only; clients and professionals cancel via PATCH) |
 
 ## Roadmap
@@ -275,19 +283,22 @@ After the tests, JaCoCo generates a coverage report. Open `target/site/jacoco/in
 - [x] More tests for the remaining gaps (appointment status transitions, exception handlers)
 - [x] Testcontainers: the Spring context test runs against a throwaway MySQL container
 - [x] Concurrency test for the double-booking lock, run against a real MySQL container (Testcontainers)
+- [x] Optimistic locking on appointments, with a concurrency test for confirm vs cancel
 - [x] Unit testing — UserServiceImpl, ProfessionalServiceImpl, AppointmentServiceImpl fully covered (68 tests)
-- [x] Unit testing — AuthService / JwtService fully covered (6 tests)
+- [x] Unit testing — AuthService / JwtService fully covered (9 tests)
 - [x] Unit testing — CurrentUserService
-- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (200+ tests in total across the project)
+- [x] Controller tests (MockMvc) — Auth, User, Professional and Appointment controllers (210+ tests in total across the project)
 - [x] Rate limiting on the login endpoint
 - [x] Actuator health endpoint and Docker healthcheck
+- [ ] Pagination on the list endpoints
+- [ ] Bootstrap for the first ADMIN account
 
 ## Bugs and security fixes
 
 Things I found and fixed while building the project:
 
 <details>
-<summary>Show the 19 fixes</summary>
+<summary>Show the 24 fixes</summary>
 
 - Users could create appointments on behalf of other users — `userId` in the request body wasn't checked against the logged-in user. The field was later removed from the DTO: the client is now always taken from the token.
 - A `Professional` could be created without an existing `User` account — broke the "user first, professional later" model.
@@ -308,6 +319,11 @@ Things I found and fixed while building the project:
 - Unknown routes, unsupported HTTP methods and malformed path values (like `/api/users/abc`) returned a generic 500 — the catch-all exception handler was swallowing Spring MVC's own exceptions. Added specific handlers that return 404, 405 and 400.
 - Changing an email to one that already belongs to another account ended in a 500 (the database unique constraint rejected it) — added an `AccountEmailValidator` that returns a clear 409 before saving, plus a handler for `DataIntegrityViolationException` as a safety net for race conditions.
 - `POST /api/users` (the public sign-up) modified an existing account without authentication when the email existed but had no user profile — sign-up now always returns 409 if the email is already registered.
+- Appointments in the past could be booked for up to a few hours — `@Future` on a `LocalDateTime` compared against the container's clock (UTC), while clients send local time (UTC-3 in Argentina). The JVM default timezone is now set at startup to the business timezone (configurable with `APP_TIMEZONE`).
+- A confirmation could overwrite a cancellation made at the same moment (lost update) — the status change read the appointment and saved it without any lock, so with two concurrent `PATCH` requests the last write won and a cancelled appointment could end up `CONFIRMED`. `Appointment` now has a `@Version` column (Flyway migration V3) and the loser gets a `409`. Covered by an integration test that fires a confirm and a cancel at the same time for 20 rounds against a real MySQL container and checks that a successful cancellation is never lost.
+- `401` and `403` answered by the security filter chain didn't follow the API's JSON format — the `401` used a different key (`error` instead of `message`) and the `403` on role-protected URLs had an empty body. Added an `AccessDeniedHandler` and unified both responses to `{ "message": "..." }`, with tests that check the body.
+- An ADMIN without a client profile got `403` on `GET /api/users/{id}` — the service looked up the caller's user profile before checking the ADMIN role. The role is now checked first, and the profile is only looked up for non-admins.
+- The JWT signing key could be arbitrarily short, and passwords longer than BCrypt's 72-byte limit weren't handled — the app now refuses to start if `JWT_SECRET` has fewer than 32 characters, and passwords are validated between 8 and 72 characters. Also removed `cascade = ALL` from `User.appointments`, so a user deletion can never wipe the appointment history if the service-level guard is bypassed.
 
 </details>
 
